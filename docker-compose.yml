@@ -1,0 +1,10 @@
+services:
+  db:
+    image: mariadb:10.6
+    environment:
+      MYSQL_ROOT_PASSWORD: password
+      MYSQL_DATABASE: et
+      MYSQL_USER: et
+      MYSQL_PASSWORD: et
+    ports:
+      - "3306:3306"
