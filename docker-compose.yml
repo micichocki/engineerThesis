@@ -1,10 +1,9 @@
 services:
   db:
-    image: mariadb:10.6
+    image: postgres:13
     environment:
-      MYSQL_ROOT_PASSWORD: password
-      MYSQL_DATABASE: et
-      MYSQL_USER: et
-      MYSQL_PASSWORD: et
+      POSTGRES_DB: et
+      POSTGRES_USER: et
+      POSTGRES_PASSWORD: et
     ports:
-      - "3306:3306"
+      - "5432:5432"
