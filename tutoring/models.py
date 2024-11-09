@@ -19,6 +19,7 @@ class CustomUser(AbstractUser):
 
 class Tutor(CustomUser):
     subjects = models.ManyToManyField("Subject", related_name="tutors", blank=True)
+    bio = models.TextField(blank=True, null=True)
 
     @property
     def average_rating(self) -> float:
