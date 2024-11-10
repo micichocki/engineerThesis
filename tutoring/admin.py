@@ -1,41 +1,41 @@
 from django.contrib import admin
-from .models import CustomUser, Tutor, Student, Parent, AvailableHour, Subject, Lesson, BankAccount, Payment, LessonPayment
+from .models import User, AvailableHour, Subject, Lesson, BankAccount, Payment, LessonPayment, EducationLevel
 
-@admin.register(CustomUser)
-class CustomUserAdmin(admin.ModelAdmin):
-    list_display = ('username', 'first_name', 'last_name', 'email', 'date_of_birth', 'phone_number')
+
+@admin.register(User)
+class UserAdmin(admin.ModelAdmin):
+    list_display = ('username', 'first_name', 'last_name', 'email', 'date_of_birth', 'phone_number', 'get_tutor_profile', 'get_student_profile', 'get_parent_profile')
     search_fields = ('username', 'email', 'first_name', 'last_name')
 
+    def get_tutor_profile(self, obj):
+        return obj.tutorprofile if hasattr(obj, 'tutorprofile') else None
+    get_tutor_profile.short_description = 'Tutor Profile'
 
-@admin.register(Tutor)
-class TutorAdmin(admin.ModelAdmin):
-    list_display = ('username', 'first_name', 'last_name', 'average_rating')
-    search_fields = ('username', 'first_name', 'last_name')
-    filter_horizontal = ('subjects',)
+    def get_student_profile(self, obj):
+        return obj.studentprofile if hasattr(obj, 'studentprofile') else None
+    get_student_profile.short_description = 'Student Profile'
 
-
-@admin.register(Student)
-class StudentAdmin(admin.ModelAdmin):
-    list_display = ('username', 'first_name', 'last_name', 'bio')
-    search_fields = ('username', 'first_name', 'last_name')
-
-
-@admin.register(Parent)
-class ParentAdmin(admin.ModelAdmin):
-    list_display = ('username', 'first_name', 'last_name')
-    search_fields = ('username', 'first_name', 'last_name')
+    def get_parent_profile(self, obj):
+        return obj.parentprofile if hasattr(obj, 'parentprofile') else None
+    get_parent_profile.short_description = 'Parent Profile'
 
 
 @admin.register(AvailableHour)
 class AvailableHourAdmin(admin.ModelAdmin):
-    list_display = ('tutor', 'student', 'day_of_week', 'start_time', 'end_time')
-    list_filter = ('tutor', 'student', 'day_of_week')
+    list_display = ('day_of_week', 'start_time', 'end_time')
+    list_filter = ('day_of_week',)
 
 
 @admin.register(Subject)
 class SubjectAdmin(admin.ModelAdmin):
     list_display = ('name',)
     search_fields = ('name',)
+
+
+@admin.register(EducationLevel)
+class EducationalLevelAdmin(admin.ModelAdmin):
+    list_display = ('level',)
+    search_fields = ('level',)
 
 
 @admin.register(Lesson)
@@ -47,8 +47,8 @@ class LessonAdmin(admin.ModelAdmin):
 
 @admin.register(BankAccount)
 class BankAccountAdmin(admin.ModelAdmin):
-    list_display = ('tutor', 'account_number', 'bank_name')
-    search_fields = ('tutor__username', 'account_number')
+    list_display = ('user', 'account_number', 'bank_name')
+    search_fields = ('user__username', 'account_number')
 
 
 @admin.register(Payment)

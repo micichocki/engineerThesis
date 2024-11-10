@@ -1,13 +1,15 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser
 from django.db.models import Avg
+from engineerThesis import settings
+from tutoring.choices import ROLE_CHOICES
 
-
-class CustomUser(AbstractUser):
-    first_name = models.CharField(max_length=100, blank=True, null=True, help_text="First name of the user")
-    last_name = models.CharField(max_length=100, blank=True, null=True, help_text="Last name of the user")
+class User(AbstractUser):
+    first_name = models.CharField(max_length=100, help_text="First name of the user")
+    last_name = models.CharField(max_length=100, help_text="Last name of the user")
     date_of_birth = models.DateField(null=True, blank=True)
     phone_number = models.CharField(max_length=15, blank=True, null=True)
+    roles = models.ManyToManyField("Role", related_name="users")
 
     def __str__(self):
         return self.username
@@ -17,48 +19,50 @@ class CustomUser(AbstractUser):
         verbose_name_plural = 'Users'
 
 
-class Tutor(CustomUser):
+class Role(models.Model):
+    name = models.CharField(max_length=20, choices=ROLE_CHOICES, unique=True)
+
+    def __str__(self):
+        return self.name
+
+    @classmethod
+    def get_role_ids(cls, role_names: list[str]) -> list[int]:
+        return [cls.objects.get(name=role_name).id for role_name in role_names]
+
+
+class TutorProfile(models.Model):
+    user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     subjects = models.ManyToManyField("Subject", related_name="tutors", blank=True)
-    bio = models.TextField(blank=True, null=True)
+    bio = models.TextField(null=True, blank=True)
+    available_hours = models.ManyToManyField("AvailableHour", related_name="tutors", blank=True)
 
     @property
     def average_rating(self) -> float:
-        avg_rating = self.lessons.aggregate(Avg('rating'))['rating__avg']
+        lessons = Lesson.objects.filter(tutor=self)
+        avg_rating = lessons.aggregate(Avg('rating'))['rating__avg']
         return avg_rating if avg_rating is not None else 0.0
 
-    def __str__(self):
-        return f"{self.username} - Tutor"
+class StudentProfile(models.Model):
+    user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    education_level = models.ForeignKey("EducationLevel", on_delete=models.SET_NULL, null=True, blank=True)
+    bio = models.TextField(null=True, blank=True)
+    available_hours = models.ManyToManyField("AvailableHour", related_name="students", blank=True)
 
+class ParentProfile(models.Model):
+    user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    children = models.ManyToManyField("StudentProfile", related_name="parents", blank=True)
 
-    class Meta:
-        verbose_name = 'Tutor'
-        verbose_name_plural = 'Tutors'
+class EducationLevel(models.Model):
+    LEVEL_CHOICES = [
+        ('primary', 'Primary School'),
+        ('secondary', 'Secondary School'),
+        ('university', 'University'),
+    ]
 
-
-
-class Student(CustomUser):
-    bio = models.TextField(null=True, blank=True, help_text="A brief description of the student")
-
-    def __str__(self):
-        if self.first_name and self.last_name:
-            return f"{self.first_name} {self.last_name} - Student"
-        return f"{self.username} - Student"
-
-    class Meta:
-        verbose_name = 'Student'
-        verbose_name_plural = 'Students'
-
-
-class Parent(CustomUser):
-    children = models.ManyToManyField(Student, related_name="parents", blank=True)
+    level = models.CharField(max_length=20, choices=LEVEL_CHOICES, unique=True)
 
     def __str__(self):
-        return f"{self.username} - Parent"
-
-    class Meta:
-        verbose_name = 'Parent'
-        verbose_name_plural = 'Parents'
-
+        return self.get_level_display()
 
 class AvailableHour(models.Model):
     DAYS_OF_WEEK = [
@@ -71,93 +75,44 @@ class AvailableHour(models.Model):
         ('Sunday', 'Sunday'),
     ]
 
-    tutor = models.ForeignKey(Tutor, on_delete=models.CASCADE, null=True, blank=True,
-                              related_name="available_hours_tutor")
-    student = models.ForeignKey(Student, on_delete=models.CASCADE, null=True, blank=True,
-                                related_name="available_hours_student")
-
     day_of_week = models.CharField(max_length=9, choices=DAYS_OF_WEEK)
     start_time = models.TimeField()
     end_time = models.TimeField()
 
-    def __str__(self):
-        if self.tutor:
-            return f"Tutor {self.tutor.username} - {self.day_of_week}: {self.start_time} to {self.end_time}"
-        else:
-            return f"Student {self.student.username} - {self.day_of_week}: {self.start_time} to {self.end_time}"
 
     class Meta:
-        unique_together = ('tutor', 'student', 'day_of_week', 'start_time', 'end_time')
+        unique_together = ('day_of_week', 'start_time', 'end_time')
 
 
 class Subject(models.Model):
-    name = models.CharField(max_length=255, unique=True, help_text="The name of the subject")
-
-    def __str__(self):
-        return self.name
+    name = models.CharField(max_length=100)
 
 
 class Lesson(models.Model):
-    tutor = models.ForeignKey(Tutor, on_delete=models.CASCADE, related_name="lessons")
-    student = models.ForeignKey(Student, on_delete=models.CASCADE, related_name="lessons")
-    subject = models.ForeignKey(Subject, on_delete=models.SET_NULL, null=True, blank=True, related_name="lessons")
-    start_time = models.DateTimeField(help_text="Start time of the lesson")
-    end_time = models.DateTimeField(help_text="End time of the lesson")
-    created_at = models.DateTimeField(auto_now_add=True, help_text="Timestamp of when the lesson was created")
-    google_meet_url = models.URLField(null=True, blank=True, help_text="URL to the Google Meet meeting")
-
-    rating = models.DecimalField(
-        max_digits=2, decimal_places=1, null=True, blank=True, help_text="Rating for the lesson (1-5)"
-    )
-    feedback = models.TextField(null=True, blank=True, help_text="Feedback about the lesson")
-
-    def __str__(self):
-        return f"Lesson {self.subject} - {self.student.username} with {self.tutor.username} on {self.start_time}"
-
-    class Meta:
-        unique_together = ('tutor', 'student', 'start_time')
+    tutor = models.ForeignKey(User, related_name='lessons_as_tutor', on_delete=models.CASCADE)
+    student = models.ForeignKey(User, related_name='lessons_as_student', on_delete=models.CASCADE)
+    subject = models.ForeignKey(Subject, on_delete=models.CASCADE)
+    start_time = models.DateTimeField()
+    end_time = models.DateTimeField()
+    rating = models.IntegerField()
 
 class BankAccount(models.Model):
-    tutor = models.OneToOneField(Tutor, on_delete=models.CASCADE, related_name="bank_account")
-    account_number = models.CharField(max_length=26, help_text="The tutor's bank account number")
-    bank_name = models.CharField(max_length=100, help_text="Name of the bank")
-
-    def __str__(self):
-        return f"Bank account for {self.tutor.username} ({self.bank_name})"
-
+    user = models.ForeignKey(User, related_name='bank_accounts', on_delete=models.CASCADE)
+    account_number = models.CharField(max_length=100)
+    bank_name = models.CharField(max_length=100)
 
 class Payment(models.Model):
-    PAYMENT_STATUS_CHOICES = [
-        ('pending', 'Pending'),
-        ('completed', 'Completed'),
-        ('failed', 'Failed'),
-    ]
-
-    student = models.ForeignKey(Student, on_delete=models.CASCADE, related_name="payments")
-    tutor = models.ForeignKey(Tutor, on_delete=models.CASCADE, related_name="payments")
-    amount = models.DecimalField(max_digits=10, decimal_places=2, help_text="Amount paid for the lesson")
-    payment_date = models.DateTimeField(auto_now_add=True, help_text="Timestamp of the payment")
-    status = models.CharField(max_length=10, choices=PAYMENT_STATUS_CHOICES, default='pending',
-                              help_text="Payment status")
-    lesson = models.ForeignKey(Lesson, on_delete=models.SET_NULL, null=True, blank=True, related_name="payments")
-
-    def __str__(self):
-        return f"Payment of {self.amount} by {self.student.username} to {self.tutor.username} for {self.lesson.subject.name}"
-
-    class Meta:
-        unique_together = ('student', 'lesson')
-
+    student = models.ForeignKey(User, related_name='payments_as_student', on_delete=models.CASCADE)
+    tutor = models.ForeignKey(User, related_name='payments_as_tutor', on_delete=models.CASCADE)
+    amount = models.DecimalField(max_digits=10, decimal_places=2)
+    payment_date = models.DateTimeField()
+    status = models.CharField(max_length=100)
+    lesson = models.ForeignKey(Lesson, on_delete=models.CASCADE)
 
 class LessonPayment(models.Model):
-    lesson = models.ForeignKey(Lesson, on_delete=models.CASCADE, related_name="lesson_payments")
-    payment = models.ForeignKey(Payment, on_delete=models.CASCADE, related_name="lesson_payments")
-    payment_status = models.CharField(max_length=20, choices=Payment.PAYMENT_STATUS_CHOICES, default='pending')
-
-    def __str__(self):
-        return f"Payment for Lesson {self.lesson.id} - {self.payment.status}"
-
-
-
+    lesson = models.ForeignKey(Lesson, on_delete=models.CASCADE)
+    payment = models.ForeignKey(Payment, on_delete=models.CASCADE)
+    payment_status = models.CharField(max_length=100)
 
 
 
