@@ -95,6 +95,9 @@ class Lesson(models.Model):
     start_time = models.DateTimeField()
     end_time = models.DateTimeField()
     rating = models.IntegerField()
+    google_meet_url = models.URLField(max_length=200, blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    feedback = models.TextField(blank=True, null=True)
 
 class BankAccount(models.Model):
     user = models.ForeignKey(User, related_name='bank_accounts', on_delete=models.CASCADE)
