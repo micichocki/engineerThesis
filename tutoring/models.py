@@ -35,6 +35,7 @@ class TutorProfile(models.Model):
     subjects = models.ManyToManyField("Subject", related_name="tutors", blank=True)
     bio = models.TextField(null=True, blank=True)
     available_hours = models.OneToOneField("AvailableHour", related_name="tutor", blank=True, null=True, on_delete=models.CASCADE)
+    working_experience = models.ManyToManyField("WorkingExperience", related_name="tutors", blank=True, null=True)
 
     @property
     def average_rating(self) -> float:
@@ -46,11 +47,19 @@ class StudentProfile(models.Model):
     user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     education_level = models.ForeignKey("EducationLevel", on_delete=models.SET_NULL, null=True, blank=True)
     bio = models.TextField(null=True, blank=True)
+    goal = models.TextField(null=True, blank=True, help_text="What student wants to achieve")
+    tasks_description = models.TextField(null=True, blank=True, help_text="Description of tasks that student needs help with")
     available_hours = models.ManyToManyField("AvailableHour", related_name="students", blank=True)
 
 class ParentProfile(models.Model):
     user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     children = models.ManyToManyField("StudentProfile", related_name="parents", blank=True)
+
+class WorkingExperience(models.Model):
+    position = models.CharField(max_length=100)
+    start_date = models.DateField()
+    end_date = models.DateField(null=True, blank=True)
+    description = models.TextField(null=True, blank=True)
 
 class EducationLevel(models.Model):
     LEVEL_CHOICES = [

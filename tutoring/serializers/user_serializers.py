@@ -2,22 +2,26 @@ from rest_framework import serializers
 
 from engineerThesis.serializers import RegisterSerializer
 from tutoring.models import TutorProfile, StudentProfile, ParentProfile, User, Role
-from tutoring.serializers.serializers import SubjectSerializer, AvailableHourSerializer
+from tutoring.serializers.serializers import SubjectSerializer, AvailableHourSerializer, EducationLevelSerializer, \
+    WorkingExperienceSerializer
 
 
 class TutorProfileSerializer(serializers.ModelSerializer):
     subjects = SubjectSerializer(many=True)
     average_rating = serializers.ReadOnlyField()
     available_hours = AvailableHourSerializer(many=True)
+    working_experience = WorkingExperienceSerializer(many=True)
 
     class Meta:
         model = TutorProfile
-        fields = ['id', 'bio', 'subjects', 'average_rating']
+        fields = ['id', 'bio', 'subjects', 'average_rating', 'working_experience']
 
 class StudentProfileSerializer(serializers.ModelSerializer):
+    available_hours = AvailableHourSerializer(many=True)
+    education_level = EducationLevelSerializer(many=True)
     class Meta:
         model = StudentProfile
-        fields = ['id',  'bio']
+        fields = ['id', 'bio', 'goal', 'tasks_description', 'education_level', 'available_hours']
 
 class ParentProfileSerializer(serializers.ModelSerializer):
     children = RegisterSerializer(many=True, read_only=True)

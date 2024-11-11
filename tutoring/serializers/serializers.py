@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from tutoring.models import Subject, Lesson, AvailableHour
+from tutoring.models import Subject, Lesson, AvailableHour, EducationLevel, WorkingExperience
 
 
 class SubjectSerializer(serializers.ModelSerializer):
@@ -8,6 +8,10 @@ class SubjectSerializer(serializers.ModelSerializer):
         model = Subject
         fields = ['id', 'name']
 
+class EducationLevelSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = EducationLevel
+        fields = ['id', 'level']
 
 class LessonSerializer(serializers.ModelSerializer):
     tutor = serializers.StringRelatedField()
@@ -26,4 +30,10 @@ class AvailableHourSerializer(serializers.ModelSerializer):
     class Meta:
         model = AvailableHour
         fields = ['id', 'day_of_week', 'start_time', 'end_time']
+        read_only_fields = ('id',)
+
+class WorkingExperienceSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = WorkingExperience
+        fields = ['id', 'position', 'start_date', 'end_date', 'description']
         read_only_fields = ('id',)
