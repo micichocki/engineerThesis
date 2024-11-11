@@ -34,7 +34,7 @@ class TutorProfile(models.Model):
     user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     subjects = models.ManyToManyField("Subject", related_name="tutors", blank=True)
     bio = models.TextField(null=True, blank=True)
-    available_hours = models.ManyToManyField("AvailableHour", related_name="tutors", blank=True)
+    available_hours = models.OneToOneField("AvailableHour", related_name="tutor", blank=True, null=True, on_delete=models.CASCADE)
 
     @property
     def average_rating(self) -> float:

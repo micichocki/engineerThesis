@@ -1,8 +1,22 @@
 from rest_framework import generics
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
+from rest_framework.views import APIView
+from rest_framework_simplejwt.authentication import JWTAuthentication
 
-from tutoring.models import StudentProfile, TutorProfile, ParentProfile
+from tutoring.models import StudentProfile, TutorProfile, ParentProfile, User
 from tutoring.serializers.user_serializers import StudentProfileSerializer, TutorProfileSerializer, \
-    ParentProfileSerializer
+    ParentProfileSerializer, UserSerializer
+
+
+class CurrentUserView(APIView):
+    permission_classes = [IsAuthenticated]
+    authentication_classes = [JWTAuthentication]
+
+    def get(self, request):
+        user = request.user
+        serializer = UserSerializer(user)
+        return Response(serializer.data)
 
 
 class TutorProfileListView(generics.ListCreateAPIView):
@@ -33,3 +47,9 @@ class ParentProfileListView(generics.ListCreateAPIView):
 class ParentProfileDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = ParentProfile.objects.all()
     serializer_class = ParentProfileSerializer
+
+class UserDetailView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = User.objects.all()
+    serializer_class = UserSerializer
+
+
