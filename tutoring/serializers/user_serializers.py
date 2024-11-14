@@ -1,30 +1,29 @@
 from rest_framework import serializers
 
-from engineerThesis.serializers import RegisterSerializer
 from tutoring.models import TutorProfile, StudentProfile, ParentProfile, User, Role
 from tutoring.serializers.serializers import SubjectSerializer, AvailableHourSerializer, EducationLevelSerializer, \
     WorkingExperienceSerializer
 
 
 class TutorProfileSerializer(serializers.ModelSerializer):
-    subjects = SubjectSerializer(many=True)
+    subjects = SubjectSerializer(many=True,required=False)
     average_rating = serializers.ReadOnlyField()
-    available_hours = AvailableHourSerializer(many=True)
-    working_experience = WorkingExperienceSerializer(many=True)
+    available_hours = AvailableHourSerializer(many=True,required=False)
+    working_experience = WorkingExperienceSerializer(many=True,required=False)
 
     class Meta:
         model = TutorProfile
-        fields = ['id', 'bio', 'subjects', 'average_rating', 'working_experience']
+        fields = ['id', 'bio', 'subjects', 'average_rating', 'working_experience', 'available_hours']
 
 class StudentProfileSerializer(serializers.ModelSerializer):
-    available_hours = AvailableHourSerializer(many=True)
-    education_level = EducationLevelSerializer(many=True)
+    available_hours = AvailableHourSerializer(many=True,required=False)
+    education_level = EducationLevelSerializer(required=False)
     class Meta:
         model = StudentProfile
-        fields = ['id', 'bio', 'goal', 'tasks_description', 'education_level', 'available_hours']
+        fields = ['id', 'bio', 'tasks_description', 'goal', 'tasks_description', 'education_level', 'available_hours']
 
 class ParentProfileSerializer(serializers.ModelSerializer):
-    children = RegisterSerializer(many=True, read_only=True)
+    children = StudentProfileSerializer(many=True, read_only=True)
 
     class Meta:
         model = ParentProfile
@@ -44,16 +43,17 @@ class UserSerializer(serializers.ModelSerializer):
     roles = RoleSerializer(many=True)
 
     def get_queryset(self):
-        return User.objects.filter(is_active=True)
+        return User.objects.filter(is_active=True, id=self.context['request'].user.id)
 
     def to_representation(self, instance):
         representation = super().to_representation(instance)
         if hasattr(instance, 'tutorprofile'):
-            representation['tutor_profile'] = TutorProfileSerializer(instance.tutorprofile).data
+            representation['tutor_profile'] = TutorProfileSerializer(instance).data
         if hasattr(instance, 'studentprofile'):
-            representation['student_profile'] = StudentProfileSerializer(instance.studentprofile).data
+            representation['student_profile'] = StudentProfileSerializer(instance).data
         if hasattr(instance, 'parentprofile'):
-            representation['parent_profile'] = ParentProfileSerializer(instance.parentprofile).data
+            representation['parent_profile'] = ParentProfileSerializer(instance).data
+
         return representation
 
     class Meta:

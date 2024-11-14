@@ -12,6 +12,7 @@ class EducationLevelSerializer(serializers.ModelSerializer):
     class Meta:
         model = EducationLevel
         fields = ['id', 'level']
+        read_only_fields = ('id',)
 
 class LessonSerializer(serializers.ModelSerializer):
     tutor = serializers.StringRelatedField()

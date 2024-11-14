@@ -34,8 +34,8 @@ class TutorProfile(models.Model):
     user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     subjects = models.ManyToManyField("Subject", related_name="tutors", blank=True)
     bio = models.TextField(null=True, blank=True)
-    available_hours = models.OneToOneField("AvailableHour", related_name="tutor", blank=True, null=True, on_delete=models.CASCADE)
-    working_experience = models.ManyToManyField("WorkingExperience", related_name="tutors", blank=True, null=True)
+    available_hours = models.ManyToManyField("AvailableHour", related_name="tutors", blank=True)
+    working_experience = models.ManyToManyField("WorkingExperience", related_name="tutors", blank=True)
 
     @property
     def average_rating(self) -> float:
@@ -68,7 +68,7 @@ class EducationLevel(models.Model):
         ('university', 'University'),
     ]
 
-    level = models.CharField(max_length=20, choices=LEVEL_CHOICES, unique=True)
+    level = models.CharField(max_length=20, choices=LEVEL_CHOICES)
 
     def __str__(self):
         return self.get_level_display()

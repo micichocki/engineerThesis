@@ -11,9 +11,10 @@ class RegisterSerializer(serializers.Serializer):
     last_name = serializers.CharField()
     password = serializers.CharField(write_only=True)
     roles = serializers.ChoiceField(choices=ROLE_CHOICES, write_only=True)
+    date_of_birth = serializers.DateField(required=False)
 
     class Meta:
-        fields = ('username', 'first_name', 'last_name', 'password', 'roles')
+        fields = ('username', 'first_name', 'last_name', 'password', 'roles', 'date_of_birth')
         write_only_fields = ('password', 'account_type')
         read_only_fields = ('id',)
 
@@ -25,6 +26,8 @@ class RegisterSerializer(serializers.Serializer):
             email=validated_data['username'],
             first_name=validated_data['first_name'],
             last_name=validated_data['last_name'],
+            date_of_birth=validated_data.get('date_of_birth'),
+            phone_number=validated_data.get('phone_number')
         )
         role_ids = Role.get_role_ids([validated_data['roles']])
 
