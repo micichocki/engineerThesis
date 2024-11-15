@@ -9,8 +9,7 @@ class TutorProfileSerializer(serializers.ModelSerializer):
     subjects = SubjectSerializer(many=True,required=False)
     average_rating = serializers.ReadOnlyField()
     available_hours = AvailableHourSerializer(many=True,required=False)
-    working_experience = WorkingExperienceSerializer(many=True,required=False)
-
+    working_experience = WorkingExperienceSerializer(many=True, required=False, default=[])
     class Meta:
         model = TutorProfile
         fields = ['id', 'bio', 'subjects', 'average_rating', 'working_experience', 'available_hours']
@@ -53,7 +52,6 @@ class UserSerializer(serializers.ModelSerializer):
             representation['student_profile'] = StudentProfileSerializer(instance).data
         if hasattr(instance, 'parentprofile'):
             representation['parent_profile'] = ParentProfileSerializer(instance).data
-
         return representation
 
     class Meta:

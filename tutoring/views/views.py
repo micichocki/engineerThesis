@@ -1,7 +1,7 @@
 from rest_framework import generics
 
-from tutoring.models import Lesson, EducationLevel
-from tutoring.serializers.serializers import LessonSerializer, EducationLevelSerializer
+from tutoring.models import Lesson, EducationLevel, Subject
+from tutoring.serializers.serializers import LessonSerializer, EducationLevelSerializer, SubjectSerializer
 
 
 class LessonListView(generics.ListCreateAPIView):
@@ -20,5 +20,9 @@ class EducationLevelListView(generics.ListCreateAPIView):
 class EducationLevelDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = EducationLevel.objects.all()
     serializer_class = EducationLevelSerializer
+
+class SubjectListView(generics.ListCreateAPIView):
+    queryset = Subject.objects.all()
+    serializer_class = SubjectSerializer
 
 

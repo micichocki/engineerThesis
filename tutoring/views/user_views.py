@@ -7,7 +7,8 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.authentication import JWTAuthentication
 
-from tutoring.models import StudentProfile, TutorProfile, ParentProfile, User, AvailableHour, EducationLevel
+from tutoring.models import StudentProfile, TutorProfile, ParentProfile, User, AvailableHour, EducationLevel, \
+    WorkingExperience, Subject
 from tutoring.serializers.user_serializers import StudentProfileSerializer, TutorProfileSerializer, \
     ParentProfileSerializer, UserSerializer
 
@@ -26,17 +27,63 @@ class TutorProfileListView(generics.ListCreateAPIView):
     queryset = TutorProfile.objects.all()
     serializer_class = TutorProfileSerializer
 
-
 class TutorProfileDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = TutorProfile.objects.all()
 
     serializer_class = TutorProfileSerializer
 
     def update(self, request, *args, **kwargs):
-        tutor_profile = self.get_object()
-        tutor_profile.bio = request.data.get('bio', tutor_profile.bio)
-        tutor_profile.save()
-        return Response(self.serializer_class(tutor_profile).data)
+        with transaction.atomic():
+            tutor_profile = TutorProfile.objects.get(user_id=request.user.id)
+            tutor_profile.bio = request.data.get('bio', tutor_profile.bio).capitalize()
+            working_experience = request.data.get('working_experience')
+            available_hours = request.data.get('available_hours')
+
+            if tutor_profile.available_hours.exists():
+                tutor_profile.available_hours.all().delete()
+                tutor_profile.available_hours.clear()
+                tutor_profile.save()
+            if available_hours:
+                for day_hours in available_hours.split(';'):
+                    day, hours = day_hours.split(':', 1)
+                    start_time, end_time = hours.split('-')
+                    try:
+                        start_time_obj = datetime.strptime(start_time, '%H:%M')
+                        end_time_obj = datetime.strptime(end_time, '%H:%M')
+                        if start_time_obj >= end_time_obj:
+                            return Response({'error': 'Start time cannot be greater than or equal to end time'},
+                                            status=400)
+                    except ValueError:
+                        return Response({'error': 'Invalid time format. Use HH:MM'}, status=400)
+                    available_hour = AvailableHour.objects.create(
+                        day_of_week=day,
+                        start_time=start_time,
+                        end_time=end_time
+                    )
+                    tutor_profile.available_hours.add(available_hour)
+            tutor_profile.subjects.clear()
+            subjects = request.data.get('subjects')
+            if subjects:
+                subject_ids = []
+                for subject_name in subjects:
+                    subject = Subject.objects.filter(name=subject_name).first()
+                    if subject:
+                        subject_ids.append(subject.id)
+                tutor_profile.subjects.set(subject_ids)
+            if working_experience:
+                tutor_profile.working_experience.all().delete()
+                tutor_profile.working_experience.clear()
+                for experience in working_experience:
+                    experience_obj = WorkingExperience.objects.create(
+                        position=experience.get('position'),
+                        start_date=experience.get('start_date'),
+                        end_date=experience.get('end_date'),
+                        description=experience.get('description'),
+                    )
+                    tutor_profile.working_experience.add(experience_obj)
+
+            tutor_profile.save()
+        return Response(TutorProfileSerializer(tutor_profile.user).data)
 
 
 class StudentProfileListView(generics.ListCreateAPIView):
