@@ -34,9 +34,23 @@ class TutorProfileDetailView(generics.RetrieveUpdateDestroyAPIView):
 
     def update(self, request, *args, **kwargs):
         with transaction.atomic():
-            tutor_profile = TutorProfile.objects.get(user_id=request.user.id)
+            tutor_profile = TutorProfile.objects.select_related('user').get(user_id=request.user.id)
+
             tutor_profile.bio = request.data.get('bio', tutor_profile.bio).capitalize()
+
             working_experience = request.data.get('working_experience')
+            if working_experience:
+                tutor_profile.working_experience.all().delete()
+                tutor_profile.working_experience.clear()
+                for experience in working_experience:
+                    experience_obj = WorkingExperience.objects.create(
+                        position=experience.get('position'),
+                        start_date=experience.get('start_date'),
+                        end_date=experience.get('end_date') or None,
+                        description=experience.get('description'),
+                    )
+                    tutor_profile.working_experience.add(experience_obj)
+
             available_hours = request.data.get('available_hours')
 
             if tutor_profile.available_hours.exists():
@@ -48,8 +62,8 @@ class TutorProfileDetailView(generics.RetrieveUpdateDestroyAPIView):
                     day, hours = day_hours.split(':', 1)
                     start_time, end_time = hours.split('-')
                     try:
-                        start_time_obj = datetime.strptime(start_time, '%H:%M')
-                        end_time_obj = datetime.strptime(end_time, '%H:%M')
+                        start_time_obj = datetime.strptime(start_time, '%H:%M:%S')
+                        end_time_obj = datetime.strptime(end_time, '%H:%M:%S')
                         if start_time_obj >= end_time_obj:
                             return Response({'error': 'Start time cannot be greater than or equal to end time'},
                                             status=400)
@@ -61,29 +75,17 @@ class TutorProfileDetailView(generics.RetrieveUpdateDestroyAPIView):
                         end_time=end_time
                     )
                     tutor_profile.available_hours.add(available_hour)
+
+            subjects = request.data.get('subjects', [])
             tutor_profile.subjects.clear()
-            subjects = request.data.get('subjects')
-            if subjects:
-                subject_ids = []
-                for subject_name in subjects:
-                    subject = Subject.objects.filter(name=subject_name).first()
-                    if subject:
-                        subject_ids.append(subject.id)
-                tutor_profile.subjects.set(subject_ids)
-            if working_experience:
-                tutor_profile.working_experience.all().delete()
-                tutor_profile.working_experience.clear()
-                for experience in working_experience:
-                    experience_obj = WorkingExperience.objects.create(
-                        position=experience.get('position'),
-                        start_date=experience.get('start_date'),
-                        end_date=experience.get('end_date'),
-                        description=experience.get('description'),
-                    )
-                    tutor_profile.working_experience.add(experience_obj)
+            for subject_name in subjects:
+                subject = Subject.objects.filter(name=subject_name).first()
+                if not subject:
+                    return Response({'error': 'Invalid subject: {}'.format(subject_name)}, status=400)
+                tutor_profile.subjects.add(subject)
 
             tutor_profile.save()
-        return Response(TutorProfileSerializer(tutor_profile.user).data)
+        return Response(TutorProfileSerializer(tutor_profile).data)
 
 
 class StudentProfileListView(generics.ListCreateAPIView):

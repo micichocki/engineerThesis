@@ -47,11 +47,12 @@ class UserSerializer(serializers.ModelSerializer):
     def to_representation(self, instance):
         representation = super().to_representation(instance)
         if hasattr(instance, 'tutorprofile'):
-            representation['tutor_profile'] = TutorProfileSerializer(instance).data
+            representation['tutor_profile'] = TutorProfileSerializer(instance.tutorprofile).data
         if hasattr(instance, 'studentprofile'):
-            representation['student_profile'] = StudentProfileSerializer(instance).data
+            representation['student_profile'] = StudentProfileSerializer(instance.studentprofile).data
         if hasattr(instance, 'parentprofile'):
-            representation['parent_profile'] = ParentProfileSerializer(instance).data
+            representation['parent_profile'] = ParentProfileSerializer(instance.parentprofile).data
+
         return representation
 
     class Meta:

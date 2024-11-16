@@ -99,8 +99,8 @@ class Subject(models.Model):
 
 
 class Lesson(models.Model):
-    tutor = models.ForeignKey(User, related_name='lessons_as_tutor', on_delete=models.CASCADE)
-    student = models.ForeignKey(User, related_name='lessons_as_student', on_delete=models.CASCADE)
+    tutor = models.ForeignKey(TutorProfile, related_name='lessons_as_tutor', on_delete=models.CASCADE)
+    student = models.ForeignKey(StudentProfile, related_name='lessons_as_student', on_delete=models.CASCADE)
     subject = models.ForeignKey(Subject, on_delete=models.CASCADE)
     start_time = models.DateTimeField()
     end_time = models.DateTimeField()
