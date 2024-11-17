@@ -41,8 +41,11 @@ INSTALLED_APPS = [
     'rest_framework',
     'drf_yasg',
     'corsheaders',
+    'channels',
     'tutoring.apps.TutoringConfig',
 ]
+
+ASGI_APPLICATION = 'engineerThesis.asgi.application'
 
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',

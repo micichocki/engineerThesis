@@ -104,10 +104,11 @@ class Lesson(models.Model):
     subject = models.ForeignKey(Subject, on_delete=models.CASCADE)
     start_time = models.DateTimeField()
     end_time = models.DateTimeField()
-    rating = models.IntegerField()
+    rating = models.IntegerField(blank=True, null=True)
     google_meet_url = models.URLField(max_length=200, blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     feedback = models.TextField(blank=True, null=True)
+
 
 class BankAccount(models.Model):
     user = models.ForeignKey(User, related_name='bank_accounts', on_delete=models.CASCADE)
@@ -126,6 +127,14 @@ class LessonPayment(models.Model):
     lesson = models.ForeignKey(Lesson, on_delete=models.CASCADE)
     payment = models.ForeignKey(Payment, on_delete=models.CASCADE)
     payment_status = models.CharField(max_length=100)
+
+class Message(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    content = models.TextField()
+    timestamp = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return self.content
 
 
 

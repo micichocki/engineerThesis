@@ -7,11 +7,23 @@
 asgiref==3.8.1
     # via
     #   -r requirements/local.in
+    #   channels
     #   django
     #   django-cors-headers
+build==1.2.2.post1
+    # via
+    #   -r requirements/local.in
+    #   pip-tools
+channels==4.2.0
+    # via -r requirements/local.in
+click==8.1.7
+    # via
+    #   -r requirements/local.in
+    #   pip-tools
 django==5.1.3
     # via
     #   -r requirements/local.in
+    #   channels
     #   django-cors-headers
     #   djangorestframework
     #   djangorestframework-simplejwt
@@ -38,8 +50,13 @@ iniconfig==2.0.0
 packaging==24.2
     # via
     #   -r requirements/local.in
+    #   build
     #   drf-yasg
     #   pytest
+pillow==11.0.0
+    # via -r requirements/local.in
+pip-tools==7.4.1
+    # via -r requirements/local.in
 pluggy==1.5.0
     # via
     #   -r requirements/local.in
@@ -50,6 +67,11 @@ pyjwt==2.9.0
     # via
     #   -r requirements/local.in
     #   djangorestframework-simplejwt
+pyproject-hooks==1.2.0
+    # via
+    #   -r requirements/local.in
+    #   build
+    #   pip-tools
 pytest==8.3.3
     # via -r requirements/local.in
 pytz==2024.2
@@ -68,3 +90,11 @@ uritemplate==4.1.1
     # via
     #   -r requirements/local.in
     #   drf-yasg
+wheel==0.45.0
+    # via
+    #   -r requirements/local.in
+    #   pip-tools
+
+# The following packages are considered to be unsafe in a requirements file:
+# pip
+# setuptools
