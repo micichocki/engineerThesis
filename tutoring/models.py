@@ -129,12 +129,13 @@ class LessonPayment(models.Model):
     payment_status = models.CharField(max_length=100)
 
 class Message(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    sender = models.ForeignKey(User, related_name='sent_messages', on_delete=models.CASCADE)
+    recipient = models.ForeignKey(User, related_name='received_messages', on_delete=models.CASCADE)
     content = models.TextField()
     timestamp = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return self.content
+        return f'{self.sender} to {self.recipient}: {self.content}'
 
 
 

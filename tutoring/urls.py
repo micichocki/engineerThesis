@@ -6,7 +6,8 @@ from tutoring.views.user_views import TutorProfileListView, TutorProfileDetailVi
     StudentProfileDetailView, ParentProfileListView, ParentProfileDetailView, UserDetailView, \
     CurrentUserView
 from tutoring.views.views import LessonDetailView, EducationLevelListView, SubjectListView, StudentLessonListView, \
-    TutorLessonListView, ParentLessonListView, get_message, list_messages
+    TutorLessonListView, ParentLessonListView, UserWithMessagesListView, MessageListView
+
 
 urlpatterns = [
     path('user/me/', CurrentUserView.as_view(), name='current-user'),
@@ -29,6 +30,6 @@ urlpatterns = [
     path('education-levels/', EducationLevelListView.as_view(), name='education-level-list'),
     path('subjects/', SubjectListView.as_view(), name='subject-list'),
     path('api/user/<int:pk>/', UserDetailView.as_view(), name='user-detail'),
-    path('api/messages/<int:message_id>/', get_message, name='get_message'),
-    path('api/messages/', list_messages, name='list_messages'),
+    path('messages/', MessageListView.as_view(), name='message-list'),
+    path('users-with-messages/', UserWithMessagesListView.as_view(), name='users-with-messages'),
 ]

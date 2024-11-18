@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from tutoring.models import Subject, Lesson, AvailableHour, EducationLevel, WorkingExperience
+from tutoring.models import Subject, Lesson, AvailableHour, EducationLevel, WorkingExperience, Message
 
 
 class SubjectSerializer(serializers.ModelSerializer):
@@ -25,3 +25,8 @@ class WorkingExperienceSerializer(serializers.ModelSerializer):
         model = WorkingExperience
         fields = ['id', 'position', 'start_date', 'end_date', 'description']
         read_only_fields = ('id',)
+
+class MessageSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Message
+        fields = ['sender', 'recipient', 'content', 'timestamp']

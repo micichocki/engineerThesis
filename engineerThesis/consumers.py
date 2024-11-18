@@ -1,29 +1,47 @@
 import json
-from channels.generic.websocket import AsyncWebsocketConsumer
+from channels.generic.websocket import  WebsocketConsumer
+from asgiref.sync import async_to_sync
 
-from tutoring.models import User, Message
+from tutoring.models import Message
 
 
-class ChatConsumer(AsyncWebsocketConsumer):
-    async def connect(self):
-        await self.accept()
+class ChatConsumer(WebsocketConsumer):
+    def connect(self):
+        self.sender = self.scope['url_route']['kwargs']['sender']
+        self.recipient = self.scope['url_route']['kwargs']['recipient']
+        sorted_users = sorted([self.sender, self.recipient])
+        self.room_group_name = f'chat_{sorted_users[0]}_{sorted_users[1]}'
+        async_to_sync(self.channel_layer.group_add)(
+            self.room_group_name,
+            self.channel_name
+        )
+        self.accept()
 
-    async def disconnect(self, close_code):
+
+
+    def disconnect(self, close_code):
         pass
 
-    async def receive(self, text_data=None, bytes_data=None):
+    def receive(self, text_data=None, bytes_data=None):
         text_data_json = json.loads(text_data)
-        message_content = text_data_json['message']
-        recipient_username = text_data_json['recipient']
-        sender = User.objects.get(username=self.scope['user'].username)
-        recipient = User.objects.get(username=recipient_username)
+        message = text_data_json['message']
 
-        message = Message.objects.create(sender=sender, recipient=recipient, content=message_content)
+        Message.objects.create(
+            sender=self.sender,
+            recipient=self.recipient,
+            content=message
+        )
 
-        await self.send(text_data=json.dumps({
-            'id': message.id,
-            'sender': message.sender.username,
-            'recipient': message.recipient.username,
-            'content': message.content,
-            'timestamp': message.timestamp.strftime('%Y-%m-%d %H:%M:%S')
+        async_to_sync(self.channel_layer.group_send)(
+            self.room_group_name,
+            {
+                'type': 'chat_message',
+                'message': message
+            }
+        )
+
+    def chat_message(self, event):
+        message = event['message']
+        self.send(text_data=json.dumps({
+            'message': message
         }))

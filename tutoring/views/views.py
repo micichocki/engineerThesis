@@ -4,8 +4,8 @@ from django.views.decorators.csrf import csrf_exempt
 from rest_framework import generics
 
 from tutoring.models import Lesson, EducationLevel, Subject, Message, User
-from tutoring.serializers.serializers import  EducationLevelSerializer, SubjectSerializer
-from tutoring.serializers.user_serializers import LessonSerializer
+from tutoring.serializers.serializers import EducationLevelSerializer, SubjectSerializer, MessageSerializer
+from tutoring.serializers.user_serializers import LessonSerializer, UserSerializer
 
 
 class StudentLessonListView(generics.ListAPIView):
@@ -42,36 +42,26 @@ class SubjectListView(generics.ListCreateAPIView):
     queryset = Subject.objects.all()
     serializer_class = SubjectSerializer
 
-@csrf_exempt
-def get_message(request, message_id):
-    try:
-        message = Message.objects.get(id=message_id)
-        return JsonResponse({
-            'id': message.id,
-            'user': message.user.username,
-            'content': message.content,
-            'timestamp': message.timestamp
-        })
-    except Message.DoesNotExist:
-        return JsonResponse({'error': 'Message not found'}, status=404)
+class MessageListView(generics.ListAPIView):
+    serializer_class = MessageSerializer
 
-def list_messages(request):
-    user = request.user
-    other_user_id = request.GET.get('other_user_id')
-    other_user = User.objects.get(id=other_user_id)
-    messages = Message.objects.filter(
-        (Q(sender=user) & Q(recipient=other_user)) | (Q(sender=other_user) & Q(recipient=user))
-    ).order_by('timestamp')
-    messages_data = [
-        {
-            'id': message.id,
-            'sender': message.sender.username,
-            'recipient': message.recipient.username,
-            'content': message.content,
-            'timestamp': message.timestamp.strftime('%Y-%m-%d %H:%M:%S')
-        }
-        for message in messages
-    ]
-    return JsonResponse(messages_data, safe=False)
+    def get_queryset(self):
+        sender =User.objects.filter(id=self.request.user.id).first()
+        recipient = self.request.query_params.get('recipient')
+        sorted_users = sorted([sender, recipient])
+        return Message.objects.filter(
+            sender__in=sorted_users,
+            recipient__in=sorted_users
+        ).order_by('timestamp')
 
+class UserWithMessagesListView(generics.ListAPIView):
+    serializer_class = UserSerializer
+
+    def get_queryset(self):
+        current_user = self.request.user
+        messages = Message.objects.filter(
+            Q(sender=current_user) | Q(recipient=current_user)
+        )
+        user_ids = set(messages.values_list('sender', flat=True)) | set(messages.values_list('recipient', flat=True))
+        return User.objects.filter(id__in=user_ids).distinct()
 
