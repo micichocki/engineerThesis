@@ -1,10 +1,9 @@
 from django.db.models import Q
-from django.http import JsonResponse
-from django.views.decorators.csrf import csrf_exempt
 from rest_framework import generics
 
 from tutoring.models import Lesson, EducationLevel, Subject, Message, User
-from tutoring.serializers.serializers import EducationLevelSerializer, SubjectSerializer, MessageSerializer
+from tutoring.serializers.chat_serializers import MessageSerializer
+from tutoring.serializers.serializers import EducationLevelSerializer, SubjectSerializer
 from tutoring.serializers.user_serializers import LessonSerializer, UserSerializer
 
 
@@ -46,12 +45,13 @@ class MessageListView(generics.ListAPIView):
     serializer_class = MessageSerializer
 
     def get_queryset(self):
-        sender =User.objects.filter(id=self.request.user.id).first()
-        recipient = self.request.query_params.get('recipient')
-        sorted_users = sorted([sender, recipient])
+        sender = User.objects.filter(id=self.request.user.id).first()
+        recipient_email = self.request.query_params.get('recipient')
+        recipient = User.objects.filter(email=recipient_email).first()
+        users = [sender, recipient]
         return Message.objects.filter(
-            sender__in=sorted_users,
-            recipient__in=sorted_users
+            sender__in=users,
+            recipient__in=users
         ).order_by('timestamp')
 
 class UserWithMessagesListView(generics.ListAPIView):
@@ -62,6 +62,7 @@ class UserWithMessagesListView(generics.ListAPIView):
         messages = Message.objects.filter(
             Q(sender=current_user) | Q(recipient=current_user)
         )
-        user_ids = set(messages.values_list('sender', flat=True)) | set(messages.values_list('recipient', flat=True))
+        user_ids = (set(messages.values_list('sender', flat=True)) | set(
+            messages.values_list('recipient', flat=True))) - {current_user.id}
         return User.objects.filter(id__in=user_ids).distinct()
 
