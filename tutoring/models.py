@@ -11,6 +11,7 @@ class User(AbstractUser):
     phone_number = models.CharField(max_length=15, blank=True, null=True)
     roles = models.ManyToManyField("Role", related_name="users")
     avatar = models.ImageField(upload_to='avatars/', null=True, blank=True)
+    city = models.CharField(max_length=100, blank=True, null=True)
 
     def __str__(self):
         return self.username
@@ -33,10 +34,11 @@ class Role(models.Model):
 
 class TutorProfile(models.Model):
     user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
-    subjects = models.ManyToManyField("Subject", related_name="tutors", blank=True)
+    subjects = models.ManyToManyField("Subject", through="TutorSubjectPrice", related_name="tutors", blank=True)
     bio = models.TextField(null=True, blank=True)
     available_hours = models.ManyToManyField("AvailableHour", related_name="tutors", blank=True)
     working_experience = models.ManyToManyField("WorkingExperience", related_name="tutors", blank=True)
+    is_remote = models.BooleanField(default=False, help_text="Is tutor willing to work remotely")
 
     @property
     def average_rating(self) -> float:
@@ -100,7 +102,7 @@ class Subject(models.Model):
 
 class Lesson(models.Model):
     tutor = models.ForeignKey(TutorProfile, related_name='lessons_as_tutor', on_delete=models.CASCADE)
-    student = models.ForeignKey(StudentProfile, related_name='lessons_as_student', on_delete=models.CASCADE)
+    student = models.ForeignKey(StudentProfile, related_name='lessons_as_student', on_delete=models.CASCADE, null=True)
     subject = models.ForeignKey(Subject, on_delete=models.CASCADE)
     start_time = models.DateTimeField()
     end_time = models.DateTimeField()
@@ -127,6 +129,15 @@ class LessonPayment(models.Model):
     lesson = models.ForeignKey(Lesson, on_delete=models.CASCADE)
     payment = models.ForeignKey(Payment, on_delete=models.CASCADE)
     payment_status = models.CharField(max_length=100)
+
+class TutorSubjectPrice(models.Model):
+    tutor = models.ForeignKey(TutorProfile, related_name='subject_prices', on_delete=models.CASCADE)
+    subject = models.ForeignKey(Subject, related_name='tutor_prices', on_delete=models.CASCADE)
+    price_min = models.DecimalField(max_digits=10, decimal_places=2)
+    price_max = models.DecimalField(max_digits=10, decimal_places=2)
+
+    class Meta:
+        unique_together = ('tutor', 'subject')
 
 class Message(models.Model):
     sender = models.ForeignKey(User, related_name='sent_messages', on_delete=models.CASCADE)

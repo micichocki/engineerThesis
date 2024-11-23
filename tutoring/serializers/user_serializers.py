@@ -2,22 +2,23 @@ from rest_framework import serializers
 
 from tutoring.models import TutorProfile, StudentProfile, ParentProfile, User, Role, Lesson
 from tutoring.serializers.serializers import SubjectSerializer, AvailableHourSerializer, EducationLevelSerializer, \
-    WorkingExperienceSerializer
+    WorkingExperienceSerializer, TutorSubjectPriceSerializer
 
 
 class TutorProfileSerializer(serializers.ModelSerializer):
-    subjects = SubjectSerializer(many=True,required=False)
+    subjects = SubjectSerializer(many=True, required=False)
     average_rating = serializers.ReadOnlyField()
-    available_hours = AvailableHourSerializer(many=True,required=False)
+    available_hours = AvailableHourSerializer(many=True, required=False)
     working_experience = WorkingExperienceSerializer(many=True, required=False, default=[])
     user_full_name = serializers.SerializerMethodField()
+    subject_prices = TutorSubjectPriceSerializer(many=True, required=False)
 
     def get_user_full_name(self, obj):
         return f"{obj.user.first_name} {obj.user.last_name}"
 
     class Meta:
         model = TutorProfile
-        fields = ['id', 'bio', 'subjects', 'average_rating', 'working_experience', 'available_hours', 'user_full_name']
+        fields = ['id', 'bio', 'subjects', 'average_rating', 'working_experience', 'available_hours', 'user_full_name', 'subject_prices', 'is_remote']
 
 class StudentProfileSerializer(serializers.ModelSerializer):
     available_hours = AvailableHourSerializer(many=True,required=False)
@@ -67,7 +68,7 @@ class UserSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ['id', 'username','email', 'first_name', 'last_name', 'roles' ,'date_of_birth', 'phone_number', 'tutor_profile', 'student_profile', 'parent_profile']
+        fields = ['id', 'username','email', 'first_name', 'last_name', 'roles' ,'date_of_birth', 'phone_number', 'tutor_profile', 'student_profile', 'parent_profile', 'city', 'avatar']
 
 
 class LessonSerializer(serializers.ModelSerializer):

@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from tutoring.models import Subject, AvailableHour, EducationLevel, WorkingExperience
+from tutoring.models import Subject, AvailableHour, EducationLevel, WorkingExperience, TutorSubjectPrice
 
 
 class SubjectSerializer(serializers.ModelSerializer):
@@ -25,4 +25,10 @@ class WorkingExperienceSerializer(serializers.ModelSerializer):
         model = WorkingExperience
         fields = ['id', 'position', 'start_date', 'end_date', 'description']
         read_only_fields = ('id',)
+
+class TutorSubjectPriceSerializer(serializers.ModelSerializer):
+    subject = SubjectSerializer()
+    class Meta:
+        model = TutorSubjectPrice
+        fields = ['subject', 'price_min', 'price_max']
 

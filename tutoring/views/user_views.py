@@ -8,7 +8,7 @@ from rest_framework.views import APIView
 from rest_framework_simplejwt.authentication import JWTAuthentication
 
 from tutoring.models import StudentProfile, TutorProfile, ParentProfile, User, AvailableHour, EducationLevel, \
-    WorkingExperience, Subject
+    WorkingExperience, Subject, TutorSubjectPrice
 from tutoring.serializers.user_serializers import StudentProfileSerializer, TutorProfileSerializer, \
     ParentProfileSerializer, UserSerializer
 
@@ -37,7 +37,6 @@ class TutorProfileDetailView(generics.RetrieveUpdateDestroyAPIView):
             tutor_profile = TutorProfile.objects.select_related('user').get(user_id=request.user.id)
 
             tutor_profile.bio = request.data.get('bio', tutor_profile.bio).capitalize()
-
             working_experience = request.data.get('working_experience')
             if working_experience:
                 tutor_profile.working_experience.all().delete()
@@ -50,7 +49,22 @@ class TutorProfileDetailView(generics.RetrieveUpdateDestroyAPIView):
                         description=experience.get('description'),
                     )
                     tutor_profile.working_experience.add(experience_obj)
+            subject_prices = request.data.get('subject_prices', [])
+            tutor_profile.subjects.clear()
 
+            for subject_price in subject_prices:
+                subject_name = subject_price.get('name', {})
+                price_min = subject_price.get('min_price')
+                price_max = subject_price.get('max_price')
+                subject = Subject.objects.filter(name=subject_name).first()
+                if not subject:
+                    return Response({'error': 'Invalid subject: {}'.format(subject_name)}, status=400)
+                TutorSubjectPrice.objects.create(
+                    tutor=tutor_profile,
+                    subject=subject,
+                    price_min=price_min,
+                    price_max=price_max
+                )
             available_hours = request.data.get('available_hours')
 
             if tutor_profile.available_hours.exists():
@@ -62,8 +76,8 @@ class TutorProfileDetailView(generics.RetrieveUpdateDestroyAPIView):
                     day, hours = day_hours.split(':', 1)
                     start_time, end_time = hours.split('-')
                     try:
-                        start_time_obj = datetime.strptime(start_time, '%H:%M:%S')
-                        end_time_obj = datetime.strptime(end_time, '%H:%M:%S')
+                        start_time_obj = datetime.strptime(start_time, '%H:%M').replace(second=0)
+                        end_time_obj = datetime.strptime(end_time, '%H:%M').replace(second=0)
                         if start_time_obj >= end_time_obj:
                             return Response({'error': 'Start time cannot be greater than or equal to end time'},
                                             status=400)
@@ -75,16 +89,9 @@ class TutorProfileDetailView(generics.RetrieveUpdateDestroyAPIView):
                         end_time=end_time
                     )
                     tutor_profile.available_hours.add(available_hour)
-
-            subjects = request.data.get('subjects', [])
-            tutor_profile.subjects.clear()
-            for subject_name in subjects:
-                subject = Subject.objects.filter(name=subject_name).first()
-                if not subject:
-                    return Response({'error': 'Invalid subject: {}'.format(subject_name)}, status=400)
-                tutor_profile.subjects.add(subject)
-
-            tutor_profile.save()
+        User.objects.filter(id=tutor_profile.user.id).update(city=request.data.get('city').capitalize())
+        tutor_profile.is_remote = request.data.get('is_remote', tutor_profile.is_remote)
+        tutor_profile.save()
         return Response(TutorProfileSerializer(tutor_profile).data)
 
 
@@ -163,5 +170,30 @@ class ParentProfileDetailView(generics.RetrieveUpdateDestroyAPIView):
 class UserDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = User.objects.all()
     serializer_class = UserSerializer
+
+
+class TutorListView(generics.ListCreateAPIView):
+    serializer_class = UserSerializer
+
+    def get_queryset(self):
+        queryset = User.objects.filter(tutorprofile__isnull=False)
+        city = self.request.query_params.get('city')
+        subject = self.request.query_params.get('subject')
+        min_price = self.request.query_params.get('min_price')
+        max_price = self.request.query_params.get('max_price')
+        remote_only = self.request.query_params.get('remote_only')
+
+        if city:
+            queryset = queryset.filter(tutorprofile__user__city__iexact=city)
+        if subject:
+            queryset = queryset.filter(tutorprofile__subjects__name__iexact=subject)
+        if min_price:
+            queryset = queryset.filter(tutorprofile__tutorsubjectprice__price_min__gte=min_price)
+        if max_price:
+            queryset = queryset.filter(tutorprofile__tutorsubjectprice__price_max__lte=max_price)
+        if remote_only and remote_only.lower() == 'true':
+            queryset = queryset.filter(tutorprofile__is_remote=True)
+
+        return queryset.distinct()
 
 

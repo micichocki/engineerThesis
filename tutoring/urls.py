@@ -4,14 +4,13 @@ from tutoring.views.payment_views import BankAccountListView, PaymentListCreateV
     BankAccountDetailView, LessonPaymentListCreateView, LessonPaymentDetailView
 from tutoring.views.user_views import TutorProfileListView, TutorProfileDetailView, StudentProfileListView, \
     StudentProfileDetailView, ParentProfileListView, ParentProfileDetailView, UserDetailView, \
-    CurrentUserView
+    CurrentUserView, TutorListView
 from tutoring.views.views import LessonDetailView, EducationLevelListView, SubjectListView, StudentLessonListView, \
-    TutorLessonListView, ParentLessonListView, UserWithMessagesListView, MessageListView
-
+    TutorLessonListView, ParentLessonListView, UserWithMessagesListView, MessageListView, TutorSubjectPriceListView
 
 urlpatterns = [
     path('user/me/', CurrentUserView.as_view(), name='current-user'),
-    path('tutors/', TutorProfileListView.as_view(), name='tutor-list'),
+    path('tutors/', TutorListView.as_view(), name='tutor-list'),
     path('tutors/<int:pk>/', TutorProfileDetailView.as_view(), name='tutor-detail'),
     path('students/', StudentProfileListView.as_view(), name='student-list'),
     path('students/<int:pk>/', StudentProfileDetailView.as_view(), name='student-detail'),
@@ -29,6 +28,7 @@ urlpatterns = [
     path('lesson-payments/<int:pk>/', LessonPaymentDetailView.as_view(), name='lessonpayment-detail'),
     path('education-levels/', EducationLevelListView.as_view(), name='education-level-list'),
     path('subjects/', SubjectListView.as_view(), name='subject-list'),
+    path('tutor-subject-prices/', TutorSubjectPriceListView.as_view(), name='tutor-subject-price-list'),
     path('api/user/<int:pk>/', UserDetailView.as_view(), name='user-detail'),
     path('messages/', MessageListView.as_view(), name='message-list'),
     path('users-with-messages/', UserWithMessagesListView.as_view(), name='users-with-messages'),

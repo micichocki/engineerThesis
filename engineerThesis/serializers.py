@@ -27,7 +27,8 @@ class RegisterSerializer(serializers.Serializer):
             first_name=validated_data['first_name'],
             last_name=validated_data['last_name'],
             date_of_birth=validated_data.get('date_of_birth'),
-            phone_number=validated_data.get('phone_number')
+            phone_number=validated_data.get('phone_number'),
+            city=validated_data.get('city'),
         )
         role_ids = Role.get_role_ids([validated_data['roles']])
 
