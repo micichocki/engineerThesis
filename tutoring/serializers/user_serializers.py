@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from tutoring.models import TutorProfile, StudentProfile, ParentProfile, User, Role, Lesson
+from tutoring.models import TutorProfile, StudentProfile, ParentProfile, User, Role, Lesson, Subject
 from tutoring.serializers.serializers import SubjectSerializer, AvailableHourSerializer, EducationLevelSerializer, \
     WorkingExperienceSerializer, TutorSubjectPriceSerializer
 
@@ -80,7 +80,30 @@ class LessonSerializer(serializers.ModelSerializer):
         model = Lesson
         fields = [
             'id', 'tutor', 'student', 'subject', 'start_time', 'end_time',
-            'created_at', 'google_meet_url', 'rating', 'feedback'
+            'created_at', 'google_meet_url', 'rating', 'feedback','price_per_hour', 'is_remote', 'accepted_by','is_accepted','description'
         ]
-        read_only_fields = ('created_at',)
+        read_only_fields = ('id', 'created_at',)
 
+class LessonCreateSerializer(serializers.ModelSerializer):
+    tutor = serializers.PrimaryKeyRelatedField(queryset=TutorProfile.objects.all())
+    student = serializers.PrimaryKeyRelatedField(queryset=StudentProfile.objects.all())
+    subject = serializers.PrimaryKeyRelatedField(queryset=Subject.objects.all())
+
+    class Meta:
+        model = Lesson
+        fields = [
+            'id', 'tutor', 'student', 'subject', 'start_time', 'end_time',
+            'price_per_hour', 'is_remote','accepted_by','description'
+        ]
+
+
+class LessonAcceptSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Lesson
+        fields = ['is_accepted']
+        read_only_fields = ['is_accepted']
+
+    def update(self, instance, validated_data):
+        instance.is_accepted = True
+        instance.save()
+        return instance

@@ -1,16 +1,16 @@
 from datetime import datetime
 
 from django.db import transaction
-from rest_framework import generics
+from rest_framework import generics, status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.authentication import JWTAuthentication
 
 from tutoring.models import StudentProfile, TutorProfile, ParentProfile, User, AvailableHour, EducationLevel, \
-    WorkingExperience, Subject, TutorSubjectPrice
+    WorkingExperience, Subject, TutorSubjectPrice, Lesson
 from tutoring.serializers.user_serializers import StudentProfileSerializer, TutorProfileSerializer, \
-    ParentProfileSerializer, UserSerializer
+    ParentProfileSerializer, UserSerializer, LessonCreateSerializer, LessonAcceptSerializer
 
 
 class CurrentUserView(APIView):
@@ -83,10 +83,11 @@ class TutorProfileDetailView(generics.RetrieveUpdateDestroyAPIView):
                                             status=400)
                     except ValueError:
                         return Response({'error': 'Invalid time format. Use HH:MM'}, status=400)
+
                     available_hour = AvailableHour.objects.create(
                         day_of_week=day,
-                        start_time=start_time,
-                        end_time=end_time
+                        start_time=start_time_obj,
+                        end_time=end_time_obj
                     )
                     tutor_profile.available_hours.add(available_hour)
         User.objects.filter(id=tutor_profile.user.id).update(city=request.data.get('city').capitalize())
@@ -124,20 +125,20 @@ class StudentProfileDetailView(generics.RetrieveUpdateDestroyAPIView):
                     day, hours = day_hours.split(':', 1)
                     start_time, end_time = hours.split('-')
                     try:
-                        start_time_obj = datetime.strptime(start_time, '%H:%M:%S')
-                        end_time_obj = datetime.strptime(end_time, '%H:%M:%S')
+                        start_time_obj = datetime.strptime(start_time, '%H:%M').replace(second=0)
+                        end_time_obj = datetime.strptime(end_time, '%H:%M').replace(second=0)
                         if start_time_obj >= end_time_obj:
                             return Response({'error': 'Start time cannot be greater than or equal to end time'},
                                             status=400)
                     except ValueError:
                         return Response({'error': 'Invalid time format. Use HH:MM'}, status=400)
+
                     available_hour = AvailableHour.objects.create(
                         day_of_week=day,
-                        start_time=start_time,
-                        end_time=end_time
+                        start_time=start_time_obj,
+                        end_time=end_time_obj
                     )
                     student_profile.available_hours.add(available_hour)
-
             student_profile.save()
         return Response(self.serializer_class(student_profile).data)
 
@@ -195,5 +196,51 @@ class TutorListView(generics.ListCreateAPIView):
             queryset = queryset.filter(tutorprofile__is_remote=True)
 
         return queryset.distinct()
+
+class LessonCreateView(generics.CreateAPIView):
+    queryset = Lesson.objects.all()
+    serializer_class = LessonCreateSerializer
+
+    def create(self, request, *args, **kwargs):
+        tutor_id = request.data.get('tutor')
+        student_id = request.data.get('student')
+        subject_id = request.data.get('subject')
+        date = request.data.get('date')
+        start_time = request.data.get('start_time')
+        end_time = request.data.get('end_time')
+
+        existing_lesson = Lesson.objects.filter(
+            tutor_id=tutor_id,
+            student_id=student_id,
+            subject_id=subject_id,
+            start_time__date=date
+        ).exists()
+
+        if existing_lesson:
+            return Response(
+                {'error': 'A lesson with the same tutor, student, and subject already exists for this date.'},
+                status=400)
+
+        start_time_iso = datetime.strptime(f"{date} {start_time}", '%Y-%m-%d %H:%M').isoformat()
+        end_time_iso = datetime.strptime(f"{date} {end_time}", '%Y-%m-%d %H:%M').isoformat()
+
+        request.data['start_time'] = start_time_iso
+        request.data['end_time'] = end_time_iso
+
+        return super().create(request, *args, **kwargs)
+
+class LessonAcceptView(APIView):
+    def post(self, request, pk):
+        try:
+            lesson = Lesson.objects.get(pk=pk)
+        except Lesson.DoesNotExist:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+
+        serializer = LessonAcceptSerializer(lesson, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
 
 

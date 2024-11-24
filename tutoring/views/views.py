@@ -56,8 +56,8 @@ class MessageListView(generics.ListAPIView):
         users = [sender, recipient]
         return Message.objects.filter(
             sender__in=users,
-            recipient__in=users
-        ).order_by('timestamp')
+            recipient__in=users,
+        ).exclude(sender=recipient).order_by('timestamp')
 
 class UserWithMessagesListView(generics.ListAPIView):
     serializer_class = UserSerializer

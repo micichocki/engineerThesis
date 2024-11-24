@@ -106,10 +106,17 @@ class Lesson(models.Model):
     subject = models.ForeignKey(Subject, on_delete=models.CASCADE)
     start_time = models.DateTimeField()
     end_time = models.DateTimeField()
+    price_per_hour = models.DecimalField(max_digits=4, decimal_places=2)
     rating = models.IntegerField(blank=True, null=True)
     google_meet_url = models.URLField(max_length=200, blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     feedback = models.TextField(blank=True, null=True)
+    is_remote = models.BooleanField(default=False)
+    is_accepted = models.BooleanField(default=False)
+    description = models.TextField(blank=True, null=True)
+    accepted_by = models.CharField(max_length=7,
+                                   choices=[('Tutor', 'Tutor'), ('Student', 'Student'), ('Parent', 'Parent')],
+                                   null=True, blank=True)
 
 
 class BankAccount(models.Model):

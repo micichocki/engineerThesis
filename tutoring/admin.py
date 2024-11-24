@@ -33,7 +33,7 @@ class SubjectAdmin(admin.ModelAdmin):
 
 
 @admin.register(EducationLevel)
-class EducationalLevelAdmin(admin.ModelAdmin):
+class EducationLevelAdmin(admin.ModelAdmin):
     list_display = ('level',)
     search_fields = ('level',)
 

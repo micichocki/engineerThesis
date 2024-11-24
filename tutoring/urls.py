@@ -2,9 +2,9 @@ from django.urls import path
 
 from tutoring.views.payment_views import BankAccountListView, PaymentListCreateView, PaymentDetailView, \
     BankAccountDetailView, LessonPaymentListCreateView, LessonPaymentDetailView
-from tutoring.views.user_views import TutorProfileListView, TutorProfileDetailView, StudentProfileListView, \
+from tutoring.views.user_views import TutorProfileDetailView, StudentProfileListView, \
     StudentProfileDetailView, ParentProfileListView, ParentProfileDetailView, UserDetailView, \
-    CurrentUserView, TutorListView
+    CurrentUserView, TutorListView, LessonCreateView, LessonAcceptView
 from tutoring.views.views import LessonDetailView, EducationLevelListView, SubjectListView, StudentLessonListView, \
     TutorLessonListView, ParentLessonListView, UserWithMessagesListView, MessageListView, TutorSubjectPriceListView
 
@@ -29,6 +29,9 @@ urlpatterns = [
     path('education-levels/', EducationLevelListView.as_view(), name='education-level-list'),
     path('subjects/', SubjectListView.as_view(), name='subject-list'),
     path('tutor-subject-prices/', TutorSubjectPriceListView.as_view(), name='tutor-subject-price-list'),
+    path('lessons-create/', LessonCreateView.as_view(), name='lesson-create'),
+    path('lessons/', LessonDetailView.as_view(), name='lesson-create'),
+    path('lessons/<int:pk>/accept', LessonAcceptView.as_view(), name='lesson-accept'),
     path('api/user/<int:pk>/', UserDetailView.as_view(), name='user-detail'),
     path('messages/', MessageListView.as_view(), name='message-list'),
     path('users-with-messages/', UserWithMessagesListView.as_view(), name='users-with-messages'),
