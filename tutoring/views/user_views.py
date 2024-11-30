@@ -2,6 +2,7 @@ from datetime import datetime
 
 from django.db import transaction
 from rest_framework import generics, status
+from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -19,17 +20,20 @@ class CurrentUserView(APIView):
 
     def get(self, request):
         user = request.user
-        serializer = UserSerializer(user)
+        serializer = UserSerializer(user, context={'request': request})
         return Response(serializer.data)
 
 
 class TutorProfileListView(generics.ListCreateAPIView):
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAuthenticated]
     queryset = TutorProfile.objects.all()
     serializer_class = TutorProfileSerializer
 
 class TutorProfileDetailView(generics.RetrieveUpdateDestroyAPIView):
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAuthenticated]
     queryset = TutorProfile.objects.all()
-
     serializer_class = TutorProfileSerializer
 
     def update(self, request, *args, **kwargs):
@@ -97,11 +101,15 @@ class TutorProfileDetailView(generics.RetrieveUpdateDestroyAPIView):
 
 
 class StudentProfileListView(generics.ListCreateAPIView):
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAuthenticated]
     queryset = StudentProfile.objects.all()
     serializer_class = StudentProfileSerializer
 
 
 class StudentProfileDetailView(generics.RetrieveUpdateDestroyAPIView):
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAuthenticated]
     queryset = StudentProfile.objects.all()
     serializer_class = StudentProfileSerializer
 
@@ -144,11 +152,15 @@ class StudentProfileDetailView(generics.RetrieveUpdateDestroyAPIView):
 
 
 class ParentProfileListView(generics.ListCreateAPIView):
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAuthenticated]
     queryset = ParentProfile.objects.all()
     serializer_class = ParentProfileSerializer
 
 
 class ParentProfileDetailView(generics.RetrieveUpdateDestroyAPIView):
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAuthenticated]
     queryset = ParentProfile.objects.all()
     serializer_class = ParentProfileSerializer
 
@@ -169,11 +181,15 @@ class ParentProfileDetailView(generics.RetrieveUpdateDestroyAPIView):
         return Response(self.serializer_class(parent_profile).data)
 
 class UserDetailView(generics.RetrieveUpdateDestroyAPIView):
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAuthenticated]
     queryset = User.objects.all()
     serializer_class = UserSerializer
 
 
 class TutorListView(generics.ListCreateAPIView):
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAuthenticated]
     serializer_class = UserSerializer
 
     def get_queryset(self):
@@ -198,6 +214,8 @@ class TutorListView(generics.ListCreateAPIView):
         return queryset.distinct()
 
 class LessonCreateView(generics.CreateAPIView):
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAuthenticated]
     queryset = Lesson.objects.all()
     serializer_class = LessonCreateSerializer
 
@@ -230,6 +248,9 @@ class LessonCreateView(generics.CreateAPIView):
         return super().create(request, *args, **kwargs)
 
 class LessonAcceptView(APIView):
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAuthenticated]
+
     def post(self, request, pk):
         try:
             lesson = Lesson.objects.get(pk=pk)
@@ -241,6 +262,23 @@ class LessonAcceptView(APIView):
             serializer.save()
             return Response(serializer.data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+class UploadAvatarView(APIView):
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAuthenticated]
+    parser_classes = [MultiPartParser, FormParser]
+
+    def post(self, request, *args, **kwargs):
+        user = request.user
+        avatar = request.data.get('avatar')
+
+        if not avatar:
+            return Response({"error": "No avatar image provided"}, status=status.HTTP_400_BAD_REQUEST)
+
+        user.avatar = avatar
+        user.save()
+
+        return Response({"message": "Avatar uploaded successfully"}, status=status.HTTP_200_OK)
 
 
 

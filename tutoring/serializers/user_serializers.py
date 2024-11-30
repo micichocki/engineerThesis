@@ -1,6 +1,9 @@
+from distutils.log import fatal
+
 from rest_framework import serializers
 
-from tutoring.models import TutorProfile, StudentProfile, ParentProfile, User, Role, Lesson, Subject
+from tutoring.models import TutorProfile, StudentProfile, ParentProfile, User, Role, Lesson, Subject, GoogleCredentials, \
+    LessonDocument
 from tutoring.serializers.serializers import SubjectSerializer, AvailableHourSerializer, EducationLevelSerializer, \
     WorkingExperienceSerializer, TutorSubjectPriceSerializer
 
@@ -45,12 +48,24 @@ class RoleSerializer(serializers.ModelSerializer):
         model=Role
         fields = ['id', 'name']
 
+class GoogleCredentialsSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = GoogleCredentials
+        fields = ['id', 'user', 'token', 'token_uri', 'client_id', 'client_secret', 'scopes']
 
 class UserSerializer(serializers.ModelSerializer):
     tutor_profile = TutorProfileSerializer(required=False)
     student_profile = StudentProfileSerializer(required=False)
     parent_profile = ParentProfileSerializer(required=False)
     roles = RoleSerializer(many=True)
+    google_credentials = GoogleCredentialsSerializer(read_only=True, source='googlecredentials_set', many=True)
+    avatar_url = serializers.SerializerMethodField()
+
+    def get_avatar_url(self, obj):
+        request = self.context.get('request')
+        if obj.avatar and request:
+            return request.build_absolute_uri(obj.avatar.url)
+        return None
 
     def get_queryset(self):
         return User.objects.filter(is_active=True, id=self.context['request'].user.id)
@@ -68,21 +83,36 @@ class UserSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ['id', 'username','email', 'first_name', 'last_name', 'roles' ,'date_of_birth', 'phone_number', 'tutor_profile', 'student_profile', 'parent_profile', 'city', 'avatar']
+        fields = ['id', 'username', 'email', 'first_name', 'last_name', 'roles', 'date_of_birth', 'phone_number',
+                  'tutor_profile', 'student_profile', 'parent_profile', 'city', 'avatar', 'avatar_url', 'google_credentials']
+
+class LessonDocumentSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = LessonDocument
+        fields = ['id', 'lesson', 'document', 'uploaded_at']
 
 
 class LessonSerializer(serializers.ModelSerializer):
     tutor = TutorProfileSerializer()
     student = StudentProfileSerializer()
     subject = SubjectSerializer()
+    lesson_document = LessonDocumentSerializer(required=False, many=True)
 
     class Meta:
         model = Lesson
         fields = [
             'id', 'tutor', 'student', 'subject', 'start_time', 'end_time',
-            'created_at', 'google_meet_url', 'rating', 'feedback','price_per_hour', 'is_remote', 'accepted_by','is_accepted','description'
+            'created_at', 'google_meet_url', 'rating', 'feedback','price_per_hour', 'is_remote', 'accepted_by','is_accepted','description', 'lesson_document'
         ]
         read_only_fields = ('id', 'created_at',)
+
+class LessonUpdateSerializer(serializers.ModelSerializer):
+    subject = serializers.PrimaryKeyRelatedField(queryset=Subject.objects.all())
+    class Meta:
+        model = Lesson
+        fields = [
+            'subject', 'description', 'price_per_hour', 'start_time', 'end_time', 'is_remote', 'accepted_by'
+        ]
 
 class LessonCreateSerializer(serializers.ModelSerializer):
     tutor = serializers.PrimaryKeyRelatedField(queryset=TutorProfile.objects.all())
@@ -107,3 +137,4 @@ class LessonAcceptSerializer(serializers.ModelSerializer):
         instance.is_accepted = True
         instance.save()
         return instance
+

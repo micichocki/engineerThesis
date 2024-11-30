@@ -4,7 +4,7 @@ from tutoring.views.payment_views import BankAccountListView, PaymentListCreateV
     BankAccountDetailView, LessonPaymentListCreateView, LessonPaymentDetailView
 from tutoring.views.user_views import TutorProfileDetailView, StudentProfileListView, \
     StudentProfileDetailView, ParentProfileListView, ParentProfileDetailView, UserDetailView, \
-    CurrentUserView, TutorListView, LessonCreateView, LessonAcceptView
+    CurrentUserView, TutorListView, LessonCreateView, LessonAcceptView, UploadAvatarView
 from tutoring.views.views import LessonDetailView, EducationLevelListView, SubjectListView, StudentLessonListView, \
     TutorLessonListView, ParentLessonListView, UserWithMessagesListView, MessageListView, TutorSubjectPriceListView
 
@@ -35,4 +35,6 @@ urlpatterns = [
     path('api/user/<int:pk>/', UserDetailView.as_view(), name='user-detail'),
     path('messages/', MessageListView.as_view(), name='message-list'),
     path('users-with-messages/', UserWithMessagesListView.as_view(), name='users-with-messages'),
+    path('upload-avatar/', UploadAvatarView.as_view(), name='upload-avatar'),
+
 ]

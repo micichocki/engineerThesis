@@ -14,6 +14,7 @@ Including another URLconf
     1. Import the include() function: from django.urls import include, path
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
+from django.conf.urls.static import static
 from django.contrib import admin
 from django.urls import path, include
 from rest_framework_simplejwt.views import (
@@ -24,7 +25,9 @@ from rest_framework_simplejwt.views import (
 from drf_yasg.views import get_schema_view
 from drf_yasg import openapi
 
-from engineerThesis.views import RegisterView, TokenVerifyView
+from engineerThesis import settings
+from engineerThesis.views import RegisterView, TokenVerifyView, AuthorizeGoogleCalendarView, GoogleCalendarCallbackView, \
+    CreateGoogleMeetView
 
 schema_view = get_schema_view(
     openapi.Info(
@@ -34,7 +37,6 @@ schema_view = get_schema_view(
     ),
     public=True,
 )
-
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('docs/', schema_view.with_ui('swagger', cache_timeout=0), name='swagger-schema'),
@@ -42,5 +44,13 @@ urlpatterns = [
     path('api/register/', RegisterView.as_view(), name='register'),
     path('api/token/verify/', TokenVerifyView.as_view(), name='token_verify'),
     path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
-    path('api/tutoring/', include('tutoring.urls'))
+    path('api/tutoring/lessons/authorize-google-calendar/', AuthorizeGoogleCalendarView.as_view(), name='authorize_google_calendar'),
+    path('api/tutoring/lessons/create_google_credential/', GoogleCalendarCallbackView.as_view(), name='create_google_credentials'),
+    path('api/tutoring/lessons/<int:lesson_id>/create-google-meet/', CreateGoogleMeetView.as_view(),
+         name='create_google_meet'),
+    path('api/tutoring/', include('tutoring.urls')),
 ]
+
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+

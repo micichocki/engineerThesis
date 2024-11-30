@@ -99,6 +99,13 @@ class AvailableHour(models.Model):
 class Subject(models.Model):
     name = models.CharField(max_length=100)
 
+class LessonDocument(models.Model):
+    lesson = models.ForeignKey('Lesson', related_name='documents_for_lessons', on_delete=models.CASCADE)
+    document = models.FileField(upload_to='lesson_documents/')
+    uploaded_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('lesson', 'document')
 
 class Lesson(models.Model):
     tutor = models.ForeignKey(TutorProfile, related_name='lessons_as_tutor', on_delete=models.CASCADE)
@@ -117,7 +124,7 @@ class Lesson(models.Model):
     accepted_by = models.CharField(max_length=7,
                                    choices=[('Tutor', 'Tutor'), ('Student', 'Student'), ('Parent', 'Parent')],
                                    null=True, blank=True)
-
+    documents = models.ManyToManyField('LessonDocument', related_name='lessons', blank=True)
 
 class BankAccount(models.Model):
     user = models.ForeignKey(User, related_name='bank_accounts', on_delete=models.CASCADE)
@@ -154,6 +161,15 @@ class Message(models.Model):
 
     def __str__(self):
         return f'{self.sender} to {self.recipient}: {self.content}'
+
+class GoogleCredentials(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, null=True)
+    token = models.TextField()
+    refresh_token = models.TextField(null=True)
+    token_uri = models.TextField()
+    client_id = models.TextField()
+    client_secret = models.TextField()
+    scopes = models.TextField()
 
 
 

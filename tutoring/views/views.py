@@ -4,7 +4,8 @@ from rest_framework import generics
 from tutoring.models import Lesson, EducationLevel, Subject, Message, User, TutorSubjectPrice
 from tutoring.serializers.chat_serializers import MessageSerializer
 from tutoring.serializers.serializers import EducationLevelSerializer, SubjectSerializer, TutorSubjectPriceSerializer
-from tutoring.serializers.user_serializers import LessonSerializer, UserSerializer
+from tutoring.serializers.user_serializers import LessonSerializer, UserSerializer, LessonUpdateSerializer
+
 
 class StudentLessonListView(generics.ListAPIView):
     serializer_class = LessonSerializer
@@ -26,7 +27,15 @@ class TutorLessonListView(generics.ListAPIView):
 
 class LessonDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Lesson.objects.all()
-    serializer_class = LessonSerializer
+
+    def get_serializer_class(self):
+        if self.request.method in ['PUT', 'PATCH']:
+            return LessonUpdateSerializer
+        return LessonSerializer
+
+    def update(self, request, *args, **kwargs):
+        return super().update(request, *args, **kwargs)
+
 
 class EducationLevelListView(generics.ListCreateAPIView):
     queryset = EducationLevel.objects.all()
