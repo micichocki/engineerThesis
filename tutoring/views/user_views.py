@@ -11,7 +11,8 @@ from rest_framework_simplejwt.authentication import JWTAuthentication
 from tutoring.models import StudentProfile, TutorProfile, ParentProfile, User, AvailableHour, EducationLevel, \
     WorkingExperience, Subject, TutorSubjectPrice, Lesson
 from tutoring.serializers.user_serializers import StudentProfileSerializer, TutorProfileSerializer, \
-    ParentProfileSerializer, UserSerializer, LessonCreateSerializer, LessonAcceptSerializer
+    ParentProfileSerializer, UserSerializer, LessonCreateSerializer, LessonAcceptSerializer, LessonDocumentSerializer, \
+    LessonFeedbackSerializer
 
 
 class CurrentUserView(APIView):
@@ -173,8 +174,8 @@ class ParentProfileDetailView(generics.RetrieveUpdateDestroyAPIView):
                 child = StudentProfile.objects.get(user__email=email)
                 if child != request.user:
                     parent_profile.children.add(child)
-            except User.DoesNotExist:
-                continue
+            except StudentProfile.DoesNotExist:
+                return Response({'error': 'Student profile not found'}, status=404)
         if not child:
             return Response({'error': 'Parent profile not found'}, status=404)
         parent_profile.save()
@@ -275,10 +276,54 @@ class UploadAvatarView(APIView):
         if not avatar:
             return Response({"error": "No avatar image provided"}, status=status.HTTP_400_BAD_REQUEST)
 
+        if avatar.size > 1 * 1024 * 1024 * 1024:
+            return Response({"error": "File size exceeds 1 GB limit"}, status=status.HTTP_400_BAD_REQUEST)
+
         user.avatar = avatar
         user.save()
+        return Response({"success": "Avatar uploaded successfully"}, status=status.HTTP_200_OK)
 
-        return Response({"message": "Avatar uploaded successfully"}, status=status.HTTP_200_OK)
+class LessonDocumentUploadView(APIView):
+    parser_classes = (MultiPartParser, FormParser)
+
+    def post(self, request, id, *args, **kwargs):
+        try:
+            lesson = Lesson.objects.get(id=id)
+        except Lesson.DoesNotExist:
+            return Response({"error": "Lesson not found"}, status=status.HTTP_404_NOT_FOUND)
+
+        file_serializer = LessonDocumentSerializer(data=request.data)
+        if file_serializer.is_valid():
+            file = request.data['document']
+            if not file:
+                return Response({"error": "No file provided"}, status=status.HTTP_400_BAD_REQUEST)
+            if file.size > 1 * 1024 * 1024 * 1024:
+                return Response({"error": "File size exceeds 1 GB limit"}, status=status.HTTP_400_BAD_REQUEST)
+            if not file.name.endswith('.pdf'):
+                return Response({"error": "Only PDF files are allowed"}, status=status.HTTP_400_BAD_REQUEST)
+
+            lesson_document = file_serializer.save(lesson=lesson)
+            lesson.documents.add(lesson_document)
+            return Response(file_serializer.data, status=status.HTTP_201_CREATED)
+        else:
+            return Response(file_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+class LessonFeedbackView(APIView):
+    def post(self, request, id, *args, **kwargs):
+        try:
+            lesson = Lesson.objects.get(id=id)
+        except Lesson.DoesNotExist:
+            return Response({"error": "Lesson not found"}, status=status.HTTP_404_NOT_FOUND)
+
+        if lesson.rating or lesson.comment:
+            return Response({"error": "This lesson already has a rating or comment"},
+                            status=status.HTTP_400_BAD_REQUEST)
+
+        serializer = LessonFeedbackSerializer(lesson, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 

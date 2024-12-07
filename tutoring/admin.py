@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import User, AvailableHour, Subject, Lesson, BankAccount, Payment, LessonPayment, EducationLevel
+from .models import User, AvailableHour, Subject, Lesson, BankAccount, LessonPayment, EducationLevel
 
 
 @admin.register(User)
@@ -51,15 +51,8 @@ class BankAccountAdmin(admin.ModelAdmin):
     search_fields = ('user__username', 'account_number')
 
 
-@admin.register(Payment)
-class PaymentAdmin(admin.ModelAdmin):
-    list_display = ('student', 'tutor', 'amount', 'payment_date', 'status', 'lesson')
-    list_filter = ('status', 'tutor', 'student')
-    search_fields = ('student__username', 'tutor__username', 'lesson__subject__name')
-
-
 @admin.register(LessonPayment)
 class LessonPaymentAdmin(admin.ModelAdmin):
-    list_display = ('lesson', 'payment', 'payment_status')
+    list_display = ('lesson', 'amount', 'payment_status', 'created_at')
     search_fields = ('lesson__id', 'payment__status')
 

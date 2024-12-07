@@ -2,6 +2,7 @@ from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build
 from tutoring.models import GoogleCredentials
 from google.oauth2.credentials import Credentials
+from google.auth.transport.requests import Request
 
 CREDENTIALS_FILE = 'client_secret.json'
 SCOPES = ['https://www.googleapis.com/auth/calendar', 'https://www.googleapis.com/auth/calendar.events']
@@ -10,14 +11,14 @@ def get_google_credentials():
     try:
         creds = GoogleCredentials.objects.first()
         if creds:
-            return {
-                'token': creds.token,
-                'refresh_token': creds.refresh_token,
-                'token_uri': creds.token_uri,
-                'client_id': creds.client_id,
-                'client_secret': creds.client_secret,
-                'scopes': creds.scopes.split(',')
-            }
+            return Credentials(
+                token=creds.token,
+                refresh_token=creds.refresh_token,
+                token_uri=creds.token_uri,
+                client_id=creds.client_id,
+                client_secret=creds.client_secret,
+                scopes=creds.scopes.split(',')
+            )
     except GoogleCredentials.DoesNotExist:
         return None
 
@@ -35,13 +36,14 @@ def save_google_credentials(credentials):
     )
 
 def get_authenticated_service():
-    creds = get_google_credentials()
-    if not creds:
-        flow = InstalledAppFlow.from_client_secrets_file(CREDENTIALS_FILE, SCOPES)
-        credentials = flow.run_local_server(port=8080)
+    credentials = get_google_credentials()
+    if not credentials or not credentials.valid:
+        if credentials and credentials.expired and credentials.refresh_token:
+            credentials.refresh(Request())
+        else:
+            flow = InstalledAppFlow.from_client_secrets_file(CREDENTIALS_FILE, SCOPES)
+            credentials = flow.run_local_server(port=8080)
         save_google_credentials(credentials)
-    else:
-        credentials = Credentials(**creds)
 
     service = build('calendar', 'v3', credentials=credentials)
     return service

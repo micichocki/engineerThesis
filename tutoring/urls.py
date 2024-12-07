@@ -1,10 +1,10 @@
 from django.urls import path
 
-from tutoring.views.payment_views import BankAccountListView, PaymentListCreateView, PaymentDetailView, \
-    BankAccountDetailView, LessonPaymentListCreateView, LessonPaymentDetailView
+from tutoring.views.payment_views import BankAccountListView, BankAccountDetailView, LessonPaymentListCreateView, LessonPaymentDetailView
 from tutoring.views.user_views import TutorProfileDetailView, StudentProfileListView, \
     StudentProfileDetailView, ParentProfileListView, ParentProfileDetailView, UserDetailView, \
-    CurrentUserView, TutorListView, LessonCreateView, LessonAcceptView, UploadAvatarView
+    CurrentUserView, TutorListView, LessonCreateView, LessonAcceptView, UploadAvatarView, LessonDocumentUploadView, \
+    LessonFeedbackView
 from tutoring.views.views import LessonDetailView, EducationLevelListView, SubjectListView, StudentLessonListView, \
     TutorLessonListView, ParentLessonListView, UserWithMessagesListView, MessageListView, TutorSubjectPriceListView
 
@@ -22,8 +22,6 @@ urlpatterns = [
     path('parent/lessons/', ParentLessonListView.as_view(), name='parent-lesson-list'),
     path('bank-accounts/', BankAccountListView.as_view(), name='bankaccount-list'),
     path('bank-accounts/<int:pk>/', BankAccountDetailView.as_view(), name='bankaccount-detail'),
-    path('payments/', PaymentListCreateView.as_view(), name='payment-list'),
-    path('payments/<int:pk>/', PaymentDetailView.as_view(), name='payment-detail'),
     path('lesson-payments/', LessonPaymentListCreateView.as_view(), name='lessonpayment-list'),
     path('lesson-payments/<int:pk>/', LessonPaymentDetailView.as_view(), name='lessonpayment-detail'),
     path('education-levels/', EducationLevelListView.as_view(), name='education-level-list'),
@@ -36,5 +34,6 @@ urlpatterns = [
     path('messages/', MessageListView.as_view(), name='message-list'),
     path('users-with-messages/', UserWithMessagesListView.as_view(), name='users-with-messages'),
     path('upload-avatar/', UploadAvatarView.as_view(), name='upload-avatar'),
-
+    path('lessons/<int:id>/documents/', LessonDocumentUploadView.as_view(), name='lesson-document-upload'),
+    path('lessons/<int:id>/feedback/', LessonFeedbackView.as_view(), name='lesson-feedback'),
 ]

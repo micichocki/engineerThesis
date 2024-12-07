@@ -90,19 +90,19 @@ class LessonDocumentSerializer(serializers.ModelSerializer):
     class Meta:
         model = LessonDocument
         fields = ['id', 'lesson', 'document', 'uploaded_at']
-
+        read_only_fields = ['id', 'lesson', 'uploaded_at']
 
 class LessonSerializer(serializers.ModelSerializer):
     tutor = TutorProfileSerializer()
     student = StudentProfileSerializer()
     subject = SubjectSerializer()
-    lesson_document = LessonDocumentSerializer(required=False, many=True)
+    documents = LessonDocumentSerializer(required=False, many=True)
 
     class Meta:
         model = Lesson
         fields = [
             'id', 'tutor', 'student', 'subject', 'start_time', 'end_time',
-            'created_at', 'google_meet_url', 'rating', 'feedback','price_per_hour', 'is_remote', 'accepted_by','is_accepted','description', 'lesson_document'
+            'created_at', 'google_meet_url', 'rating', 'feedback','price_per_hour', 'is_remote', 'accepted_by','is_accepted','description', 'documents'
         ]
         read_only_fields = ('id', 'created_at',)
 
@@ -137,4 +137,12 @@ class LessonAcceptSerializer(serializers.ModelSerializer):
         instance.is_accepted = True
         instance.save()
         return instance
+
+class LessonFeedbackSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Lesson
+        fields = ['feedback', 'rating']
+
+
+
 

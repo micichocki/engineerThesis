@@ -54,6 +54,7 @@ class StudentProfile(models.Model):
     tasks_description = models.TextField(null=True, blank=True, help_text="Description of tasks that student needs help with")
     available_hours = models.ManyToManyField("AvailableHour", related_name="students", blank=True)
 
+
 class ParentProfile(models.Model):
     user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     children = models.ManyToManyField("StudentProfile", related_name="parents", blank=True)
@@ -131,18 +132,11 @@ class BankAccount(models.Model):
     account_number = models.CharField(max_length=100)
     bank_name = models.CharField(max_length=100)
 
-class Payment(models.Model):
-    student = models.ForeignKey(User, related_name='payments_as_student', on_delete=models.CASCADE)
-    tutor = models.ForeignKey(User, related_name='payments_as_tutor', on_delete=models.CASCADE)
-    amount = models.DecimalField(max_digits=10, decimal_places=2)
-    payment_date = models.DateTimeField()
-    status = models.CharField(max_length=100)
-    lesson = models.ForeignKey(Lesson, on_delete=models.CASCADE)
-
 class LessonPayment(models.Model):
     lesson = models.ForeignKey(Lesson, on_delete=models.CASCADE)
-    payment = models.ForeignKey(Payment, on_delete=models.CASCADE)
     payment_status = models.CharField(max_length=100)
+    amount = models.DecimalField(max_digits=10, decimal_places=2, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
 
 class TutorSubjectPrice(models.Model):
     tutor = models.ForeignKey(TutorProfile, related_name='subject_prices', on_delete=models.CASCADE)

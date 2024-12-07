@@ -1,7 +1,7 @@
 from django.db.models import Q
 from rest_framework import generics
 
-from tutoring.models import Lesson, EducationLevel, Subject, Message, User, TutorSubjectPrice
+from tutoring.models import Lesson, EducationLevel, Subject, Message, User, TutorSubjectPrice, ParentProfile
 from tutoring.serializers.chat_serializers import MessageSerializer
 from tutoring.serializers.serializers import EducationLevelSerializer, SubjectSerializer, TutorSubjectPriceSerializer
 from tutoring.serializers.user_serializers import LessonSerializer, UserSerializer, LessonUpdateSerializer
@@ -17,7 +17,9 @@ class ParentLessonListView(generics.ListAPIView):
     serializer_class = LessonSerializer
 
     def get_queryset(self):
-        return Lesson.objects.filter(student__parent__user=self.request.user)
+        parent_profile = ParentProfile.objects.get(user=self.request.user)
+        children = parent_profile.children.all()
+        return Lesson.objects.filter(student__in=children)
 
 class TutorLessonListView(generics.ListAPIView):
     serializer_class = LessonSerializer
@@ -66,7 +68,7 @@ class MessageListView(generics.ListAPIView):
         return Message.objects.filter(
             sender__in=users,
             recipient__in=users,
-        ).exclude(sender=recipient).order_by('timestamp')
+        ).order_by('timestamp')
 
 class UserWithMessagesListView(generics.ListAPIView):
     serializer_class = UserSerializer

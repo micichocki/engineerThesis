@@ -27,8 +27,6 @@ class TokenVerifyView(APIView):
 
 
 class RegisterView(APIView):
-    authentication_classes = [JWTAuthentication]
-    permission_classes = [IsAuthenticated]
 
     def post(self, request, *args, **kwargs):
         serializer = RegisterSerializer(data=request.data)
@@ -82,7 +80,6 @@ class CreateGoogleMeetView(APIView):
             lesson = Lesson.objects.get(id=lesson_id)
         except Lesson.DoesNotExist:
             return Response({"error": "Lesson not found"}, status=status.HTTP_404_NOT_FOUND)
-        breakpoint()
         service = get_authenticated_service()
         event = {
             'summary': lesson.description,
