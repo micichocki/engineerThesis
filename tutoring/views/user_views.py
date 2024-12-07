@@ -181,12 +181,6 @@ class ParentProfileDetailView(generics.RetrieveUpdateDestroyAPIView):
         parent_profile.save()
         return Response(self.serializer_class(parent_profile).data)
 
-class UserDetailView(generics.RetrieveUpdateDestroyAPIView):
-    authentication_classes = [JWTAuthentication]
-    permission_classes = [IsAuthenticated]
-    queryset = User.objects.all()
-    serializer_class = UserSerializer
-
 
 class TutorListView(generics.ListCreateAPIView):
     authentication_classes = [JWTAuthentication]

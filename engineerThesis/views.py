@@ -80,7 +80,7 @@ class CreateGoogleMeetView(APIView):
             lesson = Lesson.objects.get(id=lesson_id)
         except Lesson.DoesNotExist:
             return Response({"error": "Lesson not found"}, status=status.HTTP_404_NOT_FOUND)
-        service = get_authenticated_service()
+        service = get_authenticated_service(self.request.user)
         event = {
             'summary': lesson.description,
             'description': lesson.description,

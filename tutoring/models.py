@@ -46,6 +46,9 @@ class TutorProfile(models.Model):
         avg_rating = lessons.aggregate(Avg('rating'))['rating__avg']
         return avg_rating if avg_rating is not None else 0.0
 
+    def __str__(self):
+        return f'TutorProfile of {self.user.username}'
+
 class StudentProfile(models.Model):
     user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     education_level = models.ForeignKey("EducationLevel", on_delete=models.SET_NULL, null=True, blank=True)
@@ -54,16 +57,25 @@ class StudentProfile(models.Model):
     tasks_description = models.TextField(null=True, blank=True, help_text="Description of tasks that student needs help with")
     available_hours = models.ManyToManyField("AvailableHour", related_name="students", blank=True)
 
+    def __str__(self):
+        return f'StudentProfile of {self.user.username}'
+
 
 class ParentProfile(models.Model):
     user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     children = models.ManyToManyField("StudentProfile", related_name="parents", blank=True)
+
+    def __str__(self):
+        return f'ParentProfile of {self.user.username}'
 
 class WorkingExperience(models.Model):
     position = models.CharField(max_length=100)
     start_date = models.DateField()
     end_date = models.DateField(null=True, blank=True)
     description = models.TextField(null=True, blank=True)
+
+    def __str__(self):
+        return f'{self.position} ({self.start_date} - {self.end_date or "Present"})'
 
 class EducationLevel(models.Model):
     LEVEL_CHOICES = [
@@ -100,6 +112,9 @@ class AvailableHour(models.Model):
 class Subject(models.Model):
     name = models.CharField(max_length=100)
 
+    def __str__(self):
+        return self.name
+
 class LessonDocument(models.Model):
     lesson = models.ForeignKey('Lesson', related_name='documents_for_lessons', on_delete=models.CASCADE)
     document = models.FileField(upload_to='lesson_documents/')
@@ -107,6 +122,9 @@ class LessonDocument(models.Model):
 
     class Meta:
         unique_together = ('lesson', 'document')
+
+    def __str__(self):
+        return f'Document for Lesson {self.lesson.id}'
 
 class Lesson(models.Model):
     tutor = models.ForeignKey(TutorProfile, related_name='lessons_as_tutor', on_delete=models.CASCADE)
@@ -127,6 +145,9 @@ class Lesson(models.Model):
                                    null=True, blank=True)
     documents = models.ManyToManyField('LessonDocument', related_name='lessons', blank=True)
 
+    def __str__(self):
+        return f'Lesson {self.id}: {self.tutor.user.username} with {self.student.user.username}'
+
 class BankAccount(models.Model):
     user = models.ForeignKey(User, related_name='bank_accounts', on_delete=models.CASCADE)
     account_number = models.CharField(max_length=100)
@@ -138,11 +159,17 @@ class LessonPayment(models.Model):
     amount = models.DecimalField(max_digits=10, decimal_places=2, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
+    def __str__(self):
+        return f'Payment for Lesson {self.lesson.id}: {self.amount} ({self.payment_status})'
+
 class TutorSubjectPrice(models.Model):
     tutor = models.ForeignKey(TutorProfile, related_name='subject_prices', on_delete=models.CASCADE)
     subject = models.ForeignKey(Subject, related_name='tutor_prices', on_delete=models.CASCADE)
     price_min = models.DecimalField(max_digits=10, decimal_places=2)
     price_max = models.DecimalField(max_digits=10, decimal_places=2)
+
+    def __str__(self):
+        return f'{self.tutor.user.username} - {self.subject.name}: {self.price_min}-{self.price_max}'
 
     class Meta:
         unique_together = ('tutor', 'subject')
