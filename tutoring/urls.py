@@ -1,12 +1,12 @@
 from django.urls import path
 
-from tutoring.views.payment_views import BankAccountDetailView, LessonPaymentListCreateView, LessonPaymentDetailView
+from tutoring.views.payment_views import BankAccountDetailView, LessonPaymentListCreateView
 from tutoring.views.user_views import TutorProfileDetailView, StudentProfileListView, \
     StudentProfileDetailView, ParentProfileListView, ParentProfileDetailView, \
     CurrentUserView, TutorListView, LessonCreateView, LessonAcceptView, UploadAvatarView, LessonDocumentUploadView, \
     LessonFeedbackView
 from tutoring.views.views import LessonDetailView, EducationLevelListView, SubjectListView, StudentLessonListView, \
-    TutorLessonListView, ParentLessonListView, UserWithMessagesListView, MessageListView, TutorSubjectPriceListView
+    TutorLessonListView, ParentLessonListView, UserWithMessagesListView, MessageListView
 
 
 
@@ -27,14 +27,11 @@ urlpatterns = [
     path('student/lessons/', StudentLessonListView.as_view(), name='student-lesson-list'),
     path('parent/lessons/', ParentLessonListView.as_view(), name='parent-lesson-list'),
     path('lessons-create/', LessonCreateView.as_view(), name='lesson-create'),
-    path('lessons/', LessonDetailView.as_view(), name='lesson-create'),
     path('lessons/<int:pk>/accept', LessonAcceptView.as_view(), name='lesson-accept'),
     path('lesson-payments/', LessonPaymentListCreateView.as_view(), name='lessonpayment-list'),
-    path('lesson-payments/<int:pk>/', LessonPaymentDetailView.as_view(), name='lessonpayment-detail'),
     path('lessons/<int:id>/documents/', LessonDocumentUploadView.as_view(), name='lesson-document-upload'),
     path('lessons/<int:id>/feedback/', LessonFeedbackView.as_view(), name='lesson-feedback'),
     path('education-levels/', EducationLevelListView.as_view(), name='education-level-list'),
     path('subjects/', SubjectListView.as_view(), name='subject-list'),
-    path('tutor-subject-prices/', TutorSubjectPriceListView.as_view(), name='tutor-subject-price-list'),
     path('bank-accounts/<int:pk>/', BankAccountDetailView.as_view(), name='bankaccount-detail'),
 ]

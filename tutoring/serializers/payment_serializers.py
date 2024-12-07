@@ -1,16 +1,15 @@
 from rest_framework import serializers
 
-from engineerThesis.serializers import RegisterSerializer
 from tutoring.models import BankAccount, LessonPayment, Lesson
-from tutoring.serializers.user_serializers import LessonSerializer
+from tutoring.serializers.user_serializers import UserSerializer
 
 
 class BankAccountSerializer(serializers.ModelSerializer):
-    tutor = RegisterSerializer()
+    user = UserSerializer(read_only=True)
 
     class Meta:
         model = BankAccount
-        fields = ['id', 'tutor', 'account_number', 'bank_name']
+        fields = ['id', 'user', 'account_number', 'bank_name']
 
 class LessonPaymentSerializer(serializers.ModelSerializer):
     lesson = serializers.PrimaryKeyRelatedField(queryset=Lesson.objects.all())

@@ -117,10 +117,15 @@ class StudentProfileDetailView(generics.RetrieveUpdateDestroyAPIView):
     def update(self, request, *args, **kwargs):
         with transaction.atomic():
             student_profile = self.get_object()
-            student_profile.bio = request.data.get('bio', student_profile.bio).capitalize()
-            student_profile.tasks_description = request.data.get('tasks_description',
-                                                                 student_profile.tasks_description).capitalize()
-            student_profile.goal = request.data.get('goal', student_profile.goal).capitalize()
+            bio = request.data.get('bio', student_profile.bio)
+            if bio:
+                student_profile.bio = bio.capitalize()
+            tasks_description = request.data.get('tasks_description', student_profile.tasks_description)
+            if tasks_description:
+                student_profile.tasks_description = tasks_description.capitalize()
+            goal = request.data.get('goal', student_profile.goal)
+            if goal:
+                student_profile.goal = goal.capitalize()
             education_level = request.data.get('education_level')
             student_profile.education_level = EducationLevel.objects.filter(level=education_level).first()
             available_hours = request.data.get('available_hours')
@@ -309,7 +314,7 @@ class LessonFeedbackView(APIView):
         except Lesson.DoesNotExist:
             return Response({"error": "Lesson not found"}, status=status.HTTP_404_NOT_FOUND)
 
-        if lesson.rating or lesson.comment:
+        if lesson.rating or lesson.feedback:
             return Response({"error": "This lesson already has a rating or comment"},
                             status=status.HTTP_400_BAD_REQUEST)
 

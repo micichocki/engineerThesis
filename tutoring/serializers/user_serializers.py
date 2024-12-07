@@ -1,4 +1,3 @@
-from distutils.log import fatal
 
 from rest_framework import serializers
 
