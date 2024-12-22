@@ -7,7 +7,6 @@ from asgiref.sync import async_to_sync
 
 from tutoring.models import Message, User
 from tutoring.serializers.chat_serializers import MessageSerializer
-from tutoring.serializers.user_serializers import UserSerializer
 
 
 def generate_hash(sender_email, recipient_email):
@@ -31,7 +30,6 @@ class ChatConsumer(WebsocketConsumer):
             self.channel_name
         )
         self.accept()
-
 
 
     def disconnect(self, close_code):
