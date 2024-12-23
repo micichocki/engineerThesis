@@ -4,3 +4,4 @@
 client_secret.json
 /media/avatars/**
 /media/lesson_documents/**
+/.coverage

@@ -95,45 +95,6 @@ def test_message_list_view():
     assert response.data[1]['content'] == 'Hello user1'
 
 
-# @pytest.mark.django_db
-# def test_tutor_list_view_with_filters():
-#     user1 = User.objects.create_user(username="tutor1", password="password123", city="CityA")
-#     user2 = User.objects.create_user(username="tutor2", password="password123", city="CityB")
-#
-#     subject_math = Subject.objects.create(name="Math")
-#     subject_science = Subject.objects.create(name="Science")
-#
-#     profile1 = TutorProfile.objects.create(user=user1, is_remote=True)
-#     profile2 = TutorProfile.objects.create(user=user2, is_remote=False)
-#
-#     TutorSubjectPrice.objects.create(tutor=profile1, subject=subject_math, price_min=50, price_max=100)
-#     TutorSubjectPrice.objects.create(tutor=profile2, subject=subject_science, price_min=30, price_max=80)
-#
-#     factory = APIRequestFactory()
-#     view = TutorListView.as_view()
-#
-#     request = factory.get(
-#         "/tutors/",
-#         {
-#             "city": "CityA",
-#             "subject": "Math",
-#             "min_price": 40,
-#             "max_price": 90,
-#             "remote_only": "true",
-#         },
-#     )
-#     request.user = user1
-#
-#     response = view(request)
-#     print(response.data)
-#     assert response.status_code == 200
-#     assert len(response.data) == 1
-#     assert response.data[0]["username"] == "tutor1"
-#     assert response.data[0]["city"] == "CityA"
-#     assert "Math" in response.data[0]["subjects"]
-#     assert float(response.data[0]["subject_prices"][0]["price_min"]) == 50
-#     assert float(response.data[0]["subject_prices"][0]["price_max"]) == 100
-
 class TutorProfileDetailViewTest(APITestCase):
     def setUp(self):
         self.user = User.objects.create_user(username='testuser', password='testpass')
